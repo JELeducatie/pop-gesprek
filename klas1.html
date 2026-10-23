@@ -54,6 +54,8 @@ section#kaart{flex:1 1 auto;min-width:0;background:var(--card);border-radius:14p
 .hulpres div{background:#fff;border:1px solid var(--rand);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:4px}
 .hulpres span{font-size:13.5px;color:var(--zacht)}
 .hulplijst{margin:0;padding-left:20px}.hulplijst li{margin:2px 0}
+.steun{border:0;padding:0;margin:0 0 6px}.steun legend{font-weight:700;font-size:15.5px;padding:0;margin:0 0 8px}
+.steun .veld{margin:0 0 10px 18px}.steun .veld label{font-weight:600;font-size:14.5px}.steun textarea{min-height:58px}
 .sterker{color:var(--zacht);font-size:14px}.sterker a{color:var(--paars);cursor:pointer;text-decoration:underline}
 .tip{background:#FFF6D6;border-radius:10px;padding:10px 14px;font-size:14.5px;margin:0 0 16px;color:#5a4400}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
@@ -92,7 +94,7 @@ svg.vis .cel:hover{opacity:.65}
 #toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#2a1f27;color:#fff;padding:12px 18px;border-radius:10px;opacity:0;transition:opacity .3s;pointer-events:none;font-size:14.5px;max-width:90vw;text-align:center;z-index:30}
 #toast.show{opacity:1}
 [hidden]{display:none!important}
-@media (max-width:860px){header .ghost{font-size:0;padding:8px 10px}header .ghost::first-letter{font-size:16px}.layout{flex-direction:column;padding:12px}nav#stappen{position:static;width:100%;flex:none;display:flex;overflow-x:auto;gap:4px}nav#stappen button{flex:0 0 auto;width:auto}nav#stappen .lbl{display:none}section#kaart{width:100%;padding:20px}.twee{grid-template-columns:1fr}}
+@media (max-width:860px){header{gap:8px}header h1{font-size:19px}header .voortgang{order:5;flex:1 1 100%;max-width:none;margin:0}header #backupOpslaan{margin-left:auto}header .ghost{font-size:0;padding:8px 10px}header .ghost::first-letter{font-size:16px}.layout{flex-direction:column;padding:12px}nav#stappen{position:static;width:100%;flex:none;display:flex;overflow-x:auto;gap:4px}nav#stappen button{flex:0 0 auto;width:auto}nav#stappen .lbl{display:none}section#kaart{width:100%;padding:20px}.twee{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -238,7 +240,11 @@ const KLASSEN=`2 mavo/havo = Economie (mavo) + Economie & Maatschappij (havo) | 
 2 gymnasium = Cultuur & Maatschappij | Economie & Maatschappij | Natuur & Gezondheid | Natuur & Techniek`;
 function standaard(versie){return{versie,dalton:JSON.parse(JSON.stringify(DALTON)),vakken:(versie==="klas1"?VAKKEN_K1:VAKKEN_K2).slice(),profielen:PROFIELEN,klassen:KLASSEN}}
 
-const DOELVRAGEN=s=>[`Aan welke ${s} ga ik de komende periode werken?`,`Wat is mijn leerdoel voor deze ${s}?`,"Wanneer heb ik dit doel bereikt?","Wat/wie heb ik nodig om mij te helpen dit doel te bereiken?"];
+const DOELVRAGEN=s=>[`Aan welke ${s} ga ik de komende periode werken?`,`Wat is mijn leerdoel voor deze ${s}?`,"Wanneer heb ik dit doel bereikt?","Wie of wat helpt mij om dit doel te bereiken?"];
+const STEUN=[["a","Wat ga ik zelf doen om dit doel te bereiken?","Zelf"],["b","Wat kan thuis doen om mij hierbij te helpen?","Thuis"],["c","Wat kan school doen om mij hierbij te helpen?","School"]];
+const steunKeys=p=>STEUN.map(([s])=>p+s);
+function steunBlok(p,nr,vraag){return`<fieldset class="steun"><legend>${nr}. ${esc(vraag)}</legend>${STEUN.map(([s,l])=>tekstVeld(p+s,l,1,180)).join("")}</fieldset>`}
+function migreerSteun(){["kern_4","basis_4","o4"].forEach(k=>{if(st.v[k]&&!st.v[k+"a"]){st.v[k+"a"]=st.v[k]}delete st.v[k]})}
 const AFSLUITING={id:"afsluiting",type:"afsluiting",titel:"Afsluiting",kort:"Afsluiting",uitleg:"Dit vul je tijdens of na het gesprek samen met je mentor in. Je mag het nu leeg laten.",
   vragen:[["afspraken","Welke afspraken hebben wij tijdens dit gesprek gemaakt?"],["totslot","En tot slot wil ik nog zeggen......"]]};
 const STAPPEN={
@@ -262,7 +268,7 @@ const STAPPEN={
     {id:"profiel",type:"profiel",titel:"Welk profiel past bij mij?",kort:"Profielen",vragen:[["p1","Welk profiel trekt mij het meest, en waarom?"],["p2","Wat wil ik nog uitzoeken over de profielen?"]]},
     {id:"toekomst",type:"vragen",titel:"Mijn toekomst",kort:"Mijn toekomst",vragen:[["later","Dit wil ik later worden of doen:"],["opleiding","Welke opleiding of welk werk spreekt mij aan?"],["past","Welk profiel past daarbij?"]]},
     {id:"ontw",type:"vragen",titel:"Mijn ontwikkeldoel",kort:"Mijn ontwikkeldoel",genummerd:1,uitleg:"Kies een vak of iets voor je profielkeuze waar je de komende periode aan gaat werken.",
-      vragen:[["o1","Aan welk vak of onderwerp ga ik de komende periode werken?"],["o2","Wat is mijn doel?"],["o3","Wanneer heb ik dit doel bereikt?"],["o4","Wat/wie heb ik nodig om mij te helpen dit doel te bereiken?"]]},
+      vragen:[["o1","Aan welk vak of onderwerp ga ik de komende periode werken?"],["o2","Wat is mijn doel?"],["o3","Wanneer heb ik dit doel bereikt?"]],steun:"o4"},
     AFSLUITING,
     {id:"klaar",type:"klaar",titel:"Klaar!",kort:"Download"}]
 };
@@ -500,9 +506,11 @@ const RX={
   uitzoek:/\b(open ?dag|meeloop|meelopen|vragen|vraag|interview|website|test|opzoeken|zoeken|uitzoeken|praten|gesprek|mentor|decaan|bezoeken|lezen|kijken|stage|bijbaan|filmpje|youtube|ouders|kennis|familie)\b/i,
   wel:/\b(maar|wel|leuk|interessant|interesse|denk aan|lijkt me|vind ik|graag|houd van|hou van|goed in)\b/i,
   opleiding:/\b(mbo|hbo|wo|universiteit|uni|hogeschool|opleiding|studie|studeren|werk|baan|beroep|bedrijf|vak|richting|school|academie)\b|(\w{3,}(er|ist|eur|aar|ant|ent|ige|kundige|loog|naut|ier))\b/i,
+  thuis:/\b(ouders?|moeder|vader|mama|papa|mam|pap|broer|zus|opa|oma|stiefmoeder|stiefvader|verzorger|familie|thuis|kamer|bureau|rustige plek|telefoon weg|wekker|huis)\b/i,
+  school:/\b(mentor|docent|docenten|leraar|lerares|juf|meester|decaan|coach|bijles|huiswerk(klas|begeleiding)|studiezaal|klasgeno(o|t)e?n?|vrienden?|vriendin|school|les|uitleg|zorgco(ö|o)rdinator|rt|remedial)\b/i,
   weetniet:/\b(weet (ik )?(het )?(nog )?niet|geen idee|nog niet zeker|twijfel|weet het niet)\b/i
 };
-const VAAG=/^(goed|ok(e|é|ay)?|prima|leuk|nice|weet (ik )?(het )?niet|geen idee|niks|niets|ja|nee|beter|gewoon|normaal|alles|ik weet het niet|idk|-+|\.+|\?+)[.!]?$/i;
+const VAAG=/^(mezelf|mijzelf|ik zelf|zelf|ik|niemand|geen|niks nodig|niets nodig|goed|ok(e|é|ay)?|prima|leuk|nice|weet (ik )?(het )?niet|geen idee|niks|niets|ja|nee|beter|gewoon|normaal|alles|ik weet het niet|idk|-+|\.+|\?+)[.!]?$/i;
 const MELD={
   kort:"Je antwoord is nog kort. Vertel iets meer.",
   vaag:"Dit zegt nog niet zoveel. Wat bedoel je precies?",
@@ -516,7 +524,9 @@ const MELD={
   profiel:"Noem het profiel waar het over gaat.",
   uitzoek:"Hoe ga je het uitzoeken? Bijvoorbeeld een open dag, of iemand iets vragen.",
   wel:"Wat weet je al wél? Wat vind je leuk of interessant?",
-  opleiding:"Noem een opleiding, werk of richting."
+  opleiding:"Noem een opleiding, werk of richting.",
+  thuis:"Wie of wat thuis kan helpen? Noem een persoon of iets concreets.",
+  school:"Wie op school kan helpen? Bijvoorbeeld je mentor of een docent, en wat die doet."
 };
 const WEETNIET_REGEL={min:8,nodig:["wel","uitzoek"],
   starters:["Ik weet het nog niet precies, maar ik vind … wel interessant.","Ik ga dit uitzoeken door …"],
@@ -539,12 +549,16 @@ const VRAAGREGELS={
     voorbeeld:["Als ik beter plan.","Als ik vier weken lang geen huiswerk ben vergeten."]},
   o3:{min:5,nodig:["tijd","meetbaar"],starters:["Ik heb dit doel bereikt als …","Voor … wil ik …"],
     voorbeeld:["Bij de toets.","Als ik bij de volgende toets Frans een 6,5 of hoger haal."]},
-  kern_4:{min:5,nodig:["wie"],starters:["Ik heb … nodig, omdat …","… kan mij helpen door …"],
-    voorbeeld:["Niemand.","Mijn mentor, die elke twee weken met mij kijkt hoe het gaat."]},
-  basis_4:{min:5,nodig:["wie"],starters:["Ik heb … nodig, omdat …","… kan mij helpen door …"],
-    voorbeeld:["Mijn agenda.","Mijn agenda, en mijn moeder die op zondag even met mij checkt of alles erin staat."]},
-  o4:{min:5,nodig:["wie"],starters:["Ik heb … nodig, omdat …","… kan mij helpen door …"],
-    voorbeeld:["Een app.","Een woordjes-app op mijn telefoon, en mijn docent Frans aan wie ik vraag welke woorden het belangrijkst zijn."]},
+  /* vraag 4, gesplitst */
+  kern_4a:{min:6,nodig:["actie"],starters:["Ik ga …","Elke … zorg ik dat …"],voorbeeld:["Mezelf.","Ik ga elke dag na school als eerste mijn agenda openen en kijken wat ik moet doen."]},
+  kern_4b:{min:5,nodig:["thuis"],starters:["Mijn … kan mij helpen door …","Thuis kan ik …"],voorbeeld:["Niks.","Mijn moeder kan op zondag even met mij kijken of alles in mijn agenda staat."]},
+  kern_4c:{min:5,nodig:["school"],starters:["Mijn mentor kan …","De docent van … kan mij helpen door …"],voorbeeld:["De school.","Mijn mentor kan elke twee weken kort met mij kijken hoe het gaat."]},
+  basis_4a:{min:6,nodig:["actie"],starters:["Ik ga …","Elke … zorg ik dat …"],voorbeeld:["Mezelf.","Ik ga elke dag na school als eerste mijn agenda openen en kijken wat ik moet doen."]},
+  basis_4b:{min:5,nodig:["thuis"],starters:["Mijn … kan mij helpen door …","Thuis kan ik …"],voorbeeld:["Niks.","Mijn moeder kan op zondag even met mij kijken of alles in mijn agenda staat."]},
+  basis_4c:{min:5,nodig:["school"],starters:["Mijn mentor kan …","De docent van … kan mij helpen door …"],voorbeeld:["De school.","Mijn mentor kan elke twee weken kort met mij kijken hoe het gaat."]},
+  o4a:{min:6,nodig:["actie"],starters:["Ik ga …","Elke … zorg ik dat …"],voorbeeld:["Mezelf.","Ik ga elke dag na school als eerste mijn agenda openen en kijken wat ik moet doen."]},
+  o4b:{min:5,nodig:["thuis"],starters:["Mijn … kan mij helpen door …","Thuis kan ik …"],voorbeeld:["Niks.","Mijn moeder kan op zondag even met mij kijken of alles in mijn agenda staat."]},
+  o4c:{min:5,nodig:["school"],starters:["Mijn mentor kan …","De docent van … kan mij helpen door …"],voorbeeld:["De school.","Mijn mentor kan elke twee weken kort met mij kijken hoe het gaat."]},
   o1:{min:2,nodig:[],starters:[],voorbeeld:["School.","Frans, vooral de woordjes."]},
   p1:{min:10,nodig:["profiel","reden"],starters:["Het profiel … trekt mij het meest, omdat …","Dat merk ik aan …"],
     voorbeeld:["N&G lijkt me leuk.","Natuur & Gezondheid trekt mij het meest, omdat ik biologie het leukste vak vind en later iets in de zorg wil doen."]},
@@ -610,7 +624,7 @@ function koppelTips(){
 }
 function zwakkeVelden(stap){
   if(!KW_AAN())return[];
-  const keys=stap.type==="doel"?[2,3,4].map(n=>stap.id+"_"+n):stap.type==="velden"?stap.velden.map(v=>v[0]):(stap.vragen||[]).map(v=>v[0]);
+  const keys=stap.type==="doel"?[stap.id+"_2",stap.id+"_3",...steunKeys(stap.id+"_4")]:stap.type==="velden"?stap.velden.map(v=>v[0]):(stap.vragen||[]).map(v=>v[0]).concat(stap.steun?steunKeys(stap.steun):[]);
   return keys.filter(k=>(st.v[k]||"").trim()&&!beoordeel(k,st.v[k]).ok);
 }
 
@@ -703,8 +717,8 @@ function ingevuld(stap){
     case"velden":return stap.velden.every(([k])=>heeft(k));
     case"vakkeuze":return stap.velden.every(([k])=>(st.v[k]||[]).length>0);
     case"wiel":return st.dalton.boven.every(x=>x>0)&&st.dalton.onder.every(x=>x>0);
-    case"doel":return[1,2,3,4].every(n=>heeft(stap.id+"_"+n));
-    case"vragen":return stap.vragen.every(([k])=>heeft(k));
+    case"doel":return[1,2,3].every(n=>heeft(stap.id+"_"+n))&&steunKeys(stap.id+"_4").every(heeft);
+    case"vragen":return stap.vragen.every(([k])=>heeft(k))&&(!stap.steun||steunKeys(stap.steun).every(heeft));
     case"vakken":return vakNamen().every(v=>st.talent[sleutel(v)]&&st.passie[sleutel(v)]);
     case"profiel":return stap.vragen.every(([k])=>heeft(k));
     case"afsluiting":return true;
@@ -749,10 +763,11 @@ function tekenStap(){
       const lijst=stap.kant==="boven"?kernLijst():basisLijst(),vr=DOELVRAGEN(stap.soort),tip=doelTip(stap.kant);
       h+=(tip?`<div class="tip">💡 ${esc(tip)}</div>`:"")+
         `<div class="veld"><label for="f_${stap.id}_1">1. ${esc(vr[0])}</label><select id="f_${stap.id}_1" data-key="${stap.id}_1"><option value="">— kies —</option>${lijst.map(o=>`<option ${st.v[stap.id+"_1"]===o?"selected":""}>${esc(o)}</option>`).join("")}</select></div>`+
-        [2,3,4].map(n=>tekstVeld(stap.id+"_"+n,n+". "+vr[n-1],1,180)).join("");
+        [2,3].map(n=>tekstVeld(stap.id+"_"+n,n+". "+vr[n-1],1,180)).join("")+steunBlok(stap.id+"_4",4,vr[3]);
       break;}
     case"vragen":
-      h+=stap.vragen.map(([key,label],i)=>tekstVeld(key,(stap.genummerd?(i+1)+". ":"")+label,1,200)).join("");break;
+      h+=stap.vragen.map(([key,label],i)=>tekstVeld(key,(stap.genummerd?(i+1)+". ":"")+label,1,200)).join("");
+      if(stap.steun)h+=steunBlok(stap.steun,stap.vragen.length+1,"Wie of wat helpt mij om dit doel te bereiken?");break;
     case"vakken":
       h+=`<p class="uitleg">Klik per vak in de blauwe helft hoe goed je erin bent, en in de oranje helft hoe leuk je het vindt. Bekijk daarna het kwadrant.</p>
       <div class="balk"><div class="seg" id="weergave"><button data-w="roos" class="${weergave==="roos"?"actief":""}">Invullen (roos)</button><button data-w="kwadrant" class="${weergave==="kwadrant"?"actief":""}">Kwadrant</button></div><div class="rechts">${diagramKnoppen("vak")}</div></div>
@@ -845,12 +860,18 @@ function inhoudDia(pres,titel){
 }
 const ant=k=>(st.v[k]||"").toString().trim();
 function pasGrootte(paren,basis,ruimte){const n=paren.reduce((s,[q,a])=>s+q.length+(a||"").length,0)+paren.length*40;return n>ruimte*1.5?Math.max(13,basis-6):n>ruimte*1.15?basis-4:n>ruimte?basis-2:basis}
+const steunParen=p=>STEUN.map(([s,,l])=>[l,ant(p+s)]);
 function vraagRuns(paren,{nummer=false,grootte=0,ruimte=520}={}){
-  grootte=grootte?pasGrootte(paren,grootte,ruimte):pasGrootte(paren,20,ruimte);
+  const plat=paren.flatMap(([q,a,subs])=>subs?[[q,""],...subs]:[[q,a]]);
+  grootte=pasGrootte(plat,grootte||20,ruimte);
   const runs=[];
-  paren.forEach(([vraag,antwoord],i)=>{
+  paren.forEach(([vraag,antwoord,subs],i)=>{
+    const laatste=i===paren.length-1;
     runs.push({text:(nummer?(i+1)+". ":"")+vraag,options:{breakLine:true,fontSize:grootte,color:"000000"}});
-    runs.push({text:antwoord||" ",options:{breakLine:i<paren.length-1,fontSize:grootte,color:HP,bold:!!antwoord,paraSpaceAfter:grootte*0.9}});
+    if(subs){subs.forEach(([l,a],k)=>{const end=k===subs.length-1;
+      runs.push({text:l+": ",options:{fontSize:grootte,color:"000000",indentLevel:1}});
+      runs.push({text:a||" ",options:{fontSize:grootte,color:HP,bold:!!a,breakLine:!(laatste&&end),paraSpaceAfter:end?grootte*0.9:2}});});}
+    else runs.push({text:antwoord||" ",options:{breakLine:!laatste,fontSize:grootte,color:HP,bold:!!antwoord,paraSpaceAfter:grootte*0.9}});
   });
   return runs;
 }
@@ -885,10 +906,11 @@ async function maakPptx(){
           s.addImage({data:p.data,x:(SW-w)/2,y:1.6,w,h});break;}
         case"doel":{
           const s=inhoudDia(pres,stap.titel),vr=DOELVRAGEN(stap.soort);
-          tekstvak(s,vraagRuns(vr.map((q,i)=>[q,ant(stap.id+"_"+(i+1))]),{nummer:true}));break;}
+          tekstvak(s,vraagRuns(vr.map((q,i)=>i<3?[q,ant(stap.id+"_"+(i+1))]:[q,"",steunParen(stap.id+"_4")]),{nummer:true}));break;}
         case"vragen":{
           const s=inhoudDia(pres,stap.titel);
-          tekstvak(s,vraagRuns(stap.vragen.map(([k,q])=>[q,ant(k)]),{nummer:!!stap.genummerd}));break;}
+          const paren=stap.vragen.map(([k,q])=>[q,ant(k)]);if(stap.steun)paren.push(["Wie of wat helpt mij om dit doel te bereiken?","",steunParen(stap.steun)]);
+          tekstvak(s,vraagRuns(paren,{nummer:!!stap.genummerd}));break;}
         case"vakken":{
           const s=inhoudDia(pres,stap.titel),a=await plaatje("svgRoos"),b=await plaatje("svgKwadrant"),h=5.3;
           const wa=h*a.ratio,wb=h*b.ratio,gap=0.5,x0=(SW-(wa+wb+gap))/2;
@@ -934,7 +956,7 @@ async function backupInlezen(bestand){
   const a=data.antwoorden;
   st={dalton:{boven:[],onder:[],dBoven:[],dOnder:[]},talent:{},passie:{},klas:"",v:{},stap:0};
   st.dalton=Object.assign(st.dalton,a.dalton);st.talent=a.talent||{};st.passie=a.passie||{};st.klas=a.klas||"";st.v=a.v||{};
-  st.stap=Number.isInteger(a.stap)?a.stap:0;
+  st.stap=Number.isInteger(a.stap)?a.stap:0;migreerSteun();
   bewaar();tekenStap();
   const d=data.opgeslagen?new Date(data.opgeslagen).toLocaleDateString("nl-NL",{day:"numeric",month:"long"}):"";
   toast("Backup geopend"+(d?" (opgeslagen op "+d+")":"")+". Je kunt verder waar je gebleven was!");
@@ -988,10 +1010,11 @@ function herlaadStatus(){
   const key="popgesprek-wizard-"+cfg.versie;
   st={dalton:{boven:[],onder:[],dBoven:[],dOnder:[]},talent:{},passie:{},klas:"",v:{},stap:0};
   try{const s=JSON.parse(localStorage.getItem(key)||"null");if(s&&s.dalton)st=Object.assign(st,s)}catch(e){}
-  $('#versieLabel').textContent=cfg.versie==="klas1"?"Klas 1":"Klas 2";tekenStap();
+  migreerSteun();$('#versieLabel').textContent=cfg.versie==="klas1"?"Klas 1":"Klas 2";tekenStap();
 }
 
 $('#versieLabel').textContent=cfg.versie==="klas1"?"Klas 1":"Klas 2";
+migreerSteun();bewaar();
 tekenStap();
 </script>
 </body>
