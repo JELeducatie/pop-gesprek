@@ -13,7 +13,12 @@ header h1{margin:0;font-size:22px;color:#fff;font-weight:800;text-shadow:0 1px 0
 header .versie{background:var(--paars);color:#fff;border-radius:20px;padding:4px 12px;font-size:13px;font-weight:700}
 header .voortgang{flex:1 1 200px;max-width:360px;height:10px;background:rgba(255,255,255,.6);border-radius:6px;overflow:hidden;margin-left:auto}
 header .voortgang div{height:100%;background:var(--paars);width:0;transition:width .3s}
-header .ghost{background:transparent;border:1.5px solid var(--paars);color:var(--paars)}
+header .ghost{background:transparent;border:1.5px solid var(--paars);color:var(--paars);padding:8px 13px;font-size:14px}
+header .ghost:hover{background:rgba(255,255,255,.45)}
+.backupblok{background:var(--paars-l);border-radius:12px;padding:14px 16px;margin:18px 0 0;font-size:15px}
+.backupblok p{margin:0 0 10px}
+.backupblok .rij{margin-top:0}
+.backupblok button.sec{background:#fff;border:1.5px solid var(--paars)}
 .layout{display:flex;gap:20px;padding:20px;max-width:1280px;margin:0 auto;align-items:flex-start}
 nav#stappen{flex:0 0 250px;background:var(--card);border-radius:14px;padding:10px;box-shadow:0 2px 10px rgba(0,0,0,.05);position:sticky;top:12px}
 nav#stappen button{display:flex;width:100%;align-items:center;gap:10px;background:transparent;color:var(--tekst);font-weight:600;padding:9px 8px;border-radius:9px;text-align:left;font-size:14.5px}
@@ -68,7 +73,7 @@ svg.vis .cel:hover{opacity:.65}
 #toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#2a1f27;color:#fff;padding:12px 18px;border-radius:10px;opacity:0;transition:opacity .3s;pointer-events:none;font-size:14.5px;max-width:90vw;text-align:center;z-index:30}
 #toast.show{opacity:1}
 [hidden]{display:none!important}
-@media (max-width:860px){.layout{flex-direction:column;padding:12px}nav#stappen{position:static;width:100%;flex:none;display:flex;overflow-x:auto;gap:4px}nav#stappen button{flex:0 0 auto;width:auto}nav#stappen .lbl{display:none}section#kaart{width:100%;padding:20px}.twee{grid-template-columns:1fr}}
+@media (max-width:860px){header .ghost{font-size:0;padding:8px 10px}header .ghost::first-letter{font-size:16px}.layout{flex-direction:column;padding:12px}nav#stappen{position:static;width:100%;flex:none;display:flex;overflow-x:auto;gap:4px}nav#stappen button{flex:0 0 auto;width:auto}nav#stappen .lbl{display:none}section#kaart{width:100%;padding:20px}.twee{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -76,6 +81,9 @@ svg.vis .cel:hover{opacity:.65}
 <header>
   <h1>Mijn POP-gesprek</h1><span class="versie" id="versieLabel"></span>
   <div class="voortgang"><div id="voortgang"></div></div>
+  <button class="ghost" id="backupOpslaan" title="Sla je antwoorden op als bestand">💾 Backup opslaan</button>
+  <button class="ghost" id="backupOpenen" title="Ga verder met een opgeslagen backup">📂 Backup openen</button>
+  <input type="file" id="backupBestand" accept=".pop,.json,application/json" hidden>
   <button class="ghost" id="mentorKnop">⚙ Mentor</button>
 </header>
 <div class="layout">
@@ -529,7 +537,8 @@ function tekenStap(){
     case"titel":
       h+=tekstVeld("naam","Wat is je naam?",0,40)+tekstVeld("klasnaam","In welke klas zit je?",0,20);
       if(cfg.versie==="klas2"){zorgKlas();h+=`<div class="veld"><label for="f_soort">Wat voor klas is het?</label><select id="f_soort">${klasOpties().map(o=>`<option ${o===st.klas?"selected":""}>${esc(o)}</option>`).join("")}</select></div>`}
-      h+=`<p class="uitleg">Je antwoorden worden automatisch bewaard op deze laptop. Je kunt dus stoppen en later verder gaan.</p>`;
+      h+=`<div class="backupblok"><p><b>Heb je al eerder gewerkt aan je POP?</b> Je antwoorden worden automatisch bewaard in deze browser. Werk je op een andere laptop of in een andere browser, open dan je backup.</p>
+        <div class="rij"><button class="sec" data-backup="openen">📂 Backup openen</button></div></div>`;
       break;
     case"velden":
       h+=stap.velden.map(([key,label,lang])=>tekstVeld(key,label,lang)).join("");break;
@@ -562,7 +571,9 @@ function tekenStap(){
       const open=S.filter(s=>s.type!=="klaar"&&s.type!=="afsluiting");
       h+=`<p class="uitleg">Download je presentatie. Daarna kun je hem in PowerPoint openen en een persoonlijk tintje geven, bijvoorbeeld met een foto.</p>
       <ul class="lijst">${open.map(s=>`<li>${ingevuld(s)?`<span class="ok">✓</span>`:`<span class="leeg">!</span>`} ${esc(s.kort)}${ingevuld(s)?"":` <span style="color:var(--zacht);font-size:14px">— nog niet helemaal ingevuld</span>`}</li>`).join("")}</ul>
-      <button class="geel groot" id="dlPptx">⬇ Download mijn PowerPoint</button>`;
+      <button class="geel groot" id="dlPptx">⬇ Download mijn PowerPoint</button>
+      <div class="backupblok"><p><b>Wil je later nog iets veranderen?</b> Sla dan ook een backup op. Daarmee kun je altijd verder, ook op een andere laptop.</p>
+        <div class="rij"><button class="sec" data-backup="opslaan">💾 Backup opslaan</button></div></div>`;
       break;}
   }
   const laatste=st.stap===S.length-1;
@@ -588,6 +599,7 @@ function tekenStap(){
   }
   if(stap.type==="profiel"){plaats("svgProfiel",$('#plek'));renderProfiel()}
   if(stap.type==="klaar")$('#dlPptx').onclick=maakPptx;
+  document.querySelectorAll('#kaart [data-backup]').forEach(b=>b.onclick=()=>b.dataset.backup==="opslaan"?backupOpslaan():$('#backupBestand').click());
   tekenNav();
 }
 function doelTip(kant){
@@ -703,6 +715,36 @@ async function maakPptx(){
   }catch(e){console.error(e);toast("Er ging iets mis bij het maken van de PowerPoint.")}
   finally{if(knop){knop.disabled=false;knop.textContent="⬇ Download mijn PowerPoint"}}
 }
+
+/* ================= backup ================= */
+const BACKUP_SOORT="pop-gesprek-backup";
+function backupOpslaan(){
+  const data={soort:BACKUP_SOORT,formaat:1,versie:cfg.versie,opgeslagen:new Date().toISOString(),antwoorden:st};
+  const naam=("POP backup "+[ant("naam"),ant("klasnaam")].filter(Boolean).join(" ")).replace(/[\\/:*?"<>|]+/g,"").trim()+".pop";
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,1)],{type:"application/json"}));
+  a.download=naam;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+  toast("Backup opgeslagen als “"+naam+"”. Bewaar dit bestand goed, bijvoorbeeld in je OneDrive.");
+}
+function heeftAntwoorden(){return Object.values(st.v||{}).some(x=>Array.isArray(x)?x.length:String(x).trim())||Object.keys(st.talent||{}).length||(st.dalton.boven||[]).some(x=>x)}
+async function backupInlezen(bestand){
+  let data;
+  try{data=JSON.parse(await bestand.text())}catch(e){toast("Dit bestand is geen POP-backup.");return}
+  if(!data||data.soort!==BACKUP_SOORT||!data.antwoorden||!data.antwoorden.dalton){toast("Dit bestand is geen POP-backup.");return}
+  if(data.versie!==cfg.versie){toast(`Deze backup hoort bij ${data.versie==="klas1"?"klas 1":"klas 2"}. Open de juiste versie en probeer het daar.`);return}
+  if(heeftAntwoorden()&&!confirm("Je huidige antwoorden in deze browser worden vervangen door de backup. Doorgaan?"))return;
+  const a=data.antwoorden;
+  st={dalton:{boven:[],onder:[],dBoven:[],dOnder:[]},talent:{},passie:{},klas:"",v:{},stap:0};
+  st.dalton=Object.assign(st.dalton,a.dalton);st.talent=a.talent||{};st.passie=a.passie||{};st.klas=a.klas||"";st.v=a.v||{};
+  st.stap=Number.isInteger(a.stap)?a.stap:0;
+  bewaar();tekenStap();
+  const d=data.opgeslagen?new Date(data.opgeslagen).toLocaleDateString("nl-NL",{day:"numeric",month:"long"}):"";
+  toast("Backup geopend"+(d?" (opgeslagen op "+d+")":"")+". Je kunt verder waar je gebleven was!");
+}
+$('#backupOpslaan').onclick=backupOpslaan;
+$('#backupOpenen').onclick=()=>$('#backupBestand').click();
+$('#backupBestand').onchange=e=>{const f=e.target.files[0];e.target.value="";if(f)backupInlezen(f)};
+window.addEventListener('dragover',e=>e.preventDefault());
+window.addEventListener('drop',e=>{const f=e.dataTransfer&&e.dataTransfer.files[0];if(f&&/\.(pop|json)$/i.test(f.name)){e.preventDefault();backupInlezen(f)}});
 
 /* ================= mentor ================= */
 $('#mentorKnop').onclick=()=>{$('#mentor').classList.add('open');bouwMentor()};
