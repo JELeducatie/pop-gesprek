@@ -36,6 +36,7 @@ section#kaart{flex:1 1 auto;min-width:0;background:var(--card);border-radius:14p
 .veld textarea{min-height:76px;resize:vertical}
 .veld input:focus,.veld textarea:focus,.veld select:focus{outline:none;border-color:var(--paars);box-shadow:0 0 0 3px var(--paars-l)}
 .teller{font-size:12px;color:var(--zacht);text-align:right;margin-left:auto}
+.teller.vol{color:var(--paars);font-weight:700}
 .onderrij{display:flex;align-items:center;gap:8px;margin-top:4px;min-height:22px}
 .tipknop{background:transparent;color:var(--paars);border:1px solid var(--rand);padding:2px 10px;border-radius:12px;font-size:12.5px;font-weight:600;animation:tipin .5s ease}
 .tipknop:hover,.tipknop[aria-expanded=true]{background:var(--paars-l);border-color:var(--paars)}
@@ -243,7 +244,7 @@ function standaard(versie){return{versie,dalton:JSON.parse(JSON.stringify(DALTON
 const DOELVRAGEN=s=>[`Aan welke ${s} ga ik de komende periode werken?`,`Wat is mijn leerdoel voor deze ${s}?`,"Wanneer heb ik dit doel bereikt?","Wie of wat helpt mij om dit doel te bereiken?"];
 const STEUN=[["a","Wat ga ik zelf doen om dit doel te bereiken?","Zelf"],["b","Wat kan thuis doen om mij hierbij te helpen?","Thuis"],["c","Wat kan school doen om mij hierbij te helpen?","School"]];
 const steunKeys=p=>STEUN.map(([s])=>p+s);
-function steunBlok(p,nr,vraag){return`<fieldset class="steun"><legend>${nr}. ${esc(vraag)}</legend>${STEUN.map(([s,l])=>tekstVeld(p+s,l,1,180)).join("")}</fieldset>`}
+function steunBlok(p,nr,vraag){return`<fieldset class="steun"><legend>${nr}. ${esc(vraag)}</legend>${STEUN.map(([s,l])=>tekstVeld(p+s,l,1,80)).join("")}</fieldset>`}
 function migreerSteun(){["kern_4","basis_4","o4"].forEach(k=>{if(st.v[k]&&!st.v[k+"a"]){st.v[k+"a"]=st.v[k]}delete st.v[k]})}
 const AFSLUITING={id:"afsluiting",type:"afsluiting",titel:"Afsluiting",kort:"Afsluiting",uitleg:"Dit vul je tijdens of na het gesprek samen met je mentor in. Je mag het nu leeg laten.",
   vragen:[["afspraken","Welke afspraken hebben wij tijdens dit gesprek gemaakt?"],["totslot","En tot slot wil ik nog zeggen......"]]};
@@ -685,7 +686,7 @@ function zorgKlas(){const ks=klasOpties();if(!ks.includes(st.klas))st.klas=ks[0]
 const kernLijst=()=>cfg.dalton.paren.map(p=>kaal(p[0]));
 const basisLijst=()=>cfg.dalton.paren.map(p=>kaal(p[1]));
 function tekstVeld(key,label,lang,max){
-  const v=st.v[key]||"",m=max?(KW_AAN()&&lang&&max>=180?300:max):(lang?(KW_AAN()?300:220):70);
+  const v=st.v[key]||"",m=max||(lang?120:50);
   return`<div class="veld"><label for="f_${key}">${esc(label)}</label>${lang
     ?`<textarea id="f_${key}" data-key="${key}" maxlength="${m}">${esc(v)}</textarea>`
     :`<input type="text" id="f_${key}" data-key="${key}" maxlength="${m}" value="${esc(v)}" autocomplete="off">`}
@@ -694,7 +695,7 @@ function tekstVeld(key,label,lang,max){
 function koppelVelden(){
   document.querySelectorAll('#kaart [data-key]').forEach(el=>el.addEventListener('input',()=>{
     st.v[el.dataset.key]=el.value;bewaar();
-    const t=document.querySelector(`[data-teller="${el.dataset.key}"]`);if(t)t.textContent=el.value.length+"/"+el.maxLength;
+    const t=document.querySelector(`[data-teller="${el.dataset.key}"]`);if(t){t.textContent=el.value.length+"/"+el.maxLength;t.classList.toggle('vol',el.value.length>=el.maxLength)}
     tekenNav();
   }));
 }
@@ -754,7 +755,7 @@ function tekenStap(){
       h+=stap.velden.map(([key,label,lang])=>tekstVeld(key,label,lang)).join("");break;
     case"vakkeuze":
       h+=stap.velden.map(([key,label])=>`<div class="veld"><label>${esc(label)}</label><div class="chips" data-chips="${key}">${vakNamen().map(v=>{const n=kaal(v),aan=(st.v[key]||[]).includes(n);return`<button data-vak="${esc(n)}" class="${aan?"aan":""}">${esc(n)}</button>`}).join("")}</div></div>
-        ${tekstVeld(key+"_t","Toelichting (mag je leeg laten)",1,140)}`).join("");break;
+        ${tekstVeld(key+"_t","Toelichting (mag je leeg laten)",1,100)}`).join("");break;
     case"wiel":
       h+=`<p class="uitleg">Kleur eerst in waar je nu staat. Zet daarna per onderdeel een dikke lijn op de plek waar je naartoe wilt groeien.</p>
       <div class="balk"><div class="seg" id="modus"><button data-m="nu" class="${modus==="nu"?"actief":""}">1 · Waar sta ik nu?</button><button data-m="doel" class="${modus==="doel"?"actief":""}">2 · Waar wil ik naartoe?</button></div><div class="rechts">${diagramKnoppen("svgVaard")}</div></div>
@@ -763,10 +764,10 @@ function tekenStap(){
       const lijst=stap.kant==="boven"?kernLijst():basisLijst(),vr=DOELVRAGEN(stap.soort),tip=doelTip(stap.kant);
       h+=(tip?`<div class="tip">💡 ${esc(tip)}</div>`:"")+
         `<div class="veld"><label for="f_${stap.id}_1">1. ${esc(vr[0])}</label><select id="f_${stap.id}_1" data-key="${stap.id}_1"><option value="">— kies —</option>${lijst.map(o=>`<option ${st.v[stap.id+"_1"]===o?"selected":""}>${esc(o)}</option>`).join("")}</select></div>`+
-        [2,3].map(n=>tekstVeld(stap.id+"_"+n,n+". "+vr[n-1],1,180)).join("")+steunBlok(stap.id+"_4",4,vr[3]);
+        [2,3].map(n=>tekstVeld(stap.id+"_"+n,n+". "+vr[n-1],1,120)).join("")+steunBlok(stap.id+"_4",4,vr[3]);
       break;}
     case"vragen":
-      h+=stap.vragen.map(([key,label],i)=>tekstVeld(key,(stap.genummerd?(i+1)+". ":"")+label,1,200)).join("");
+      h+=stap.vragen.map(([key,label],i)=>tekstVeld(key,(stap.genummerd?(i+1)+". ":"")+label,1,stap.steun?120:140)).join("");
       if(stap.steun)h+=steunBlok(stap.steun,stap.vragen.length+1,"Wie of wat helpt mij om dit doel te bereiken?");break;
     case"vakken":
       h+=`<p class="uitleg">Klik per vak in de blauwe helft hoe goed je erin bent, en in de oranje helft hoe leuk je het vindt. Bekijk daarna het kwadrant.</p>
@@ -775,9 +776,9 @@ function tekenStap(){
     case"profiel":
       zorgKlas();
       h+=`<div class="twee"><div><div class="balk"><label for="f_soort" style="font-weight:700">Mijn klas:</label><select id="f_soort" style="padding:7px 10px;border-radius:8px;border:1.5px solid var(--rand);font:inherit">${klasOpties().map(o=>`<option ${o===st.klas?"selected":""}>${esc(o)}</option>`).join("")}</select><div class="rechts">${diagramKnoppen("svgProfiel")}</div></div><div id="plek"></div></div>
-        <div>${stap.vragen.map(([key,label])=>tekstVeld(key,label,1,200)).join("")}</div></div>`;break;
+        <div>${stap.vragen.map(([key,label])=>tekstVeld(key,label,1,140)).join("")}</div></div>`;break;
     case"afsluiting":
-      h+=stap.vragen.map(([key,label])=>tekstVeld(key,label,1,200)).join("");break;
+      h+=stap.vragen.map(([key,label])=>tekstVeld(key,label,1,160)).join("");break;
     case"klaar":{
       const open=S.filter(s=>s.type!=="klaar"&&s.type!=="afsluiting");
       h+=`<p class="uitleg">Download je presentatie. Daarna kun je hem in PowerPoint openen en een persoonlijk tintje geven, bijvoorbeeld met een foto.</p>
@@ -859,11 +860,15 @@ function inhoudDia(pres,titel){
   return s;
 }
 const ant=k=>(st.v[k]||"").toString().trim();
-function pasGrootte(paren,basis,ruimte){const n=paren.reduce((s,[q,a])=>s+q.length+(a||"").length,0)+paren.length*40;return n>ruimte*1.5?Math.max(13,basis-6):n>ruimte*1.15?basis-4:n>ruimte?basis-2:basis}
+function pasGrootte(alineas,w,h){
+  for(const g of [20,18,16]){const cpl=w*72/(g*0.52),lh=g*1.2/72;
+    const hoogte=alineas.reduce((s,[txt,gap])=>s+Math.max(1,Math.ceil(txt.length/cpl))*lh+(gap?g*0.9/72:0),0);
+    if(hoogte<=h)return g}
+  return 16}
 const steunParen=p=>STEUN.map(([s,,l])=>[l,ant(p+s)]);
-function vraagRuns(paren,{nummer=false,grootte=0,ruimte=520}={}){
-  const plat=paren.flatMap(([q,a,subs])=>subs?[[q,""],...subs]:[[q,a]]);
-  grootte=pasGrootte(plat,grootte||20,ruimte);
+function vraagRuns(paren,{nummer=false,w=11.5,h=5.1}={}){
+  const alineas=paren.flatMap(([q,a,subs])=>subs?[[q,0],...subs.map(([l,x],k)=>[l+": "+(x||""),k===subs.length-1])]:[[q,0],[a||" ",1]]);
+  const grootte=pasGrootte(alineas,w,h);
   const runs=[];
   paren.forEach(([vraag,antwoord,subs],i)=>{
     const laatste=i===paren.length-1;
@@ -919,7 +924,7 @@ async function maakPptx(){
           const s=inhoudDia(pres,stap.titel),p=await plaatje("svgProfiel");
           let h=5.35,w=h*p.ratio;if(w>6.3){w=6.3;h=w/p.ratio}
           s.addImage({data:p.data,x:0.92,y:1.85,w,h});
-          tekstvak(s,vraagRuns(stap.vragen.map(([k,q])=>[q,ant(k)]),{grootte:18,ruimte:260}),{x:7.6,w:4.85,y:1.95,h:5.0});break;}
+          tekstvak(s,vraagRuns(stap.vragen.map(([k,q])=>[q,ant(k)]),{w:4.85,h:5.0}),{x:7.6,w:4.85,y:1.95,h:5.0});break;}
         case"afsluiting":{
           const s=pres.addSlide();s.background={color:HG};
           s.addText(stap.titel,{x:0.92,y:0.38,w:11.5,h:1.38,fontFace:HF,fontSize:60,bold:true,color:"FFFFFF",valign:"middle",margin:0,isTextBox:true});
