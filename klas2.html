@@ -35,7 +35,26 @@ section#kaart{flex:1 1 auto;min-width:0;background:var(--card);border-radius:14p
 .veld input[type=text],.veld textarea,.veld select{width:100%;padding:11px 13px;border:1.5px solid var(--rand);border-radius:10px;font:inherit;font-size:16px;background:#fff;color:var(--tekst)}
 .veld textarea{min-height:76px;resize:vertical}
 .veld input:focus,.veld textarea:focus,.veld select:focus{outline:none;border-color:var(--paars);box-shadow:0 0 0 3px var(--paars-l)}
-.teller{font-size:12px;color:var(--zacht);text-align:right;margin-top:3px}
+.teller{font-size:12px;color:var(--zacht);text-align:right;margin-left:auto}
+.onderrij{display:flex;align-items:center;gap:8px;margin-top:4px;min-height:22px}
+.tipknop{background:transparent;color:var(--paars);border:1px solid var(--rand);padding:2px 10px;border-radius:12px;font-size:12.5px;font-weight:600;animation:tipin .5s ease}
+.tipknop:hover,.tipknop[aria-expanded=true]{background:var(--paars-l);border-color:var(--paars)}
+@keyframes tipin{from{opacity:0}to{opacity:1}}
+.tipvak{background:#FCF8FB;border:1px solid var(--rand);border-radius:10px;padding:10px 14px;margin-top:6px;font-size:14px;animation:tipin .25s ease}
+.tipvak ul{margin:0 0 8px;padding-left:18px}.tipvak li{margin:2px 0}
+.tiprij{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:4px 0 8px}.tiprij span{color:var(--zacht);font-size:13px}
+.starter{background:#fff;color:var(--paars);border:1px dashed var(--paars);padding:4px 10px;border-radius:14px;font-size:13px;font-weight:600}
+.tipvak details summary{cursor:pointer;color:var(--paars);font-weight:600;font-size:13px}
+.tipvak .zwak{color:#9a7b90;margin:6px 0 2px}.tipvak .sterk{color:#2E6B33;margin:2px 0 0}
+.hulplink{background:transparent;color:var(--paars);padding:4px 0;font-size:14px;font-weight:600;text-decoration:underline;text-underline-offset:3px;margin:-10px 0 14px}
+.hulplink.open{text-decoration:none}
+.hulpvak{background:#FCF8FB;border:1px solid var(--rand);border-radius:12px;padding:14px 16px;margin:0 0 20px;font-size:14.5px}
+.hulpvak p{margin:0 0 8px}.hulpvak .chips button{font-size:13.5px;padding:6px 12px}
+.hulpres{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.hulpres div{background:#fff;border:1px solid var(--rand);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:4px}
+.hulpres span{font-size:13.5px;color:var(--zacht)}
+.hulplijst{margin:0;padding-left:20px}.hulplijst li{margin:2px 0}
+.sterker{color:var(--zacht);font-size:14px}.sterker a{color:var(--paars);cursor:pointer;text-decoration:underline}
 .tip{background:#FFF6D6;border-radius:10px;padding:10px 14px;font-size:14.5px;margin:0 0 16px;color:#5a4400}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chips button{background:#fff;border:1.5px solid var(--rand);color:var(--tekst);padding:8px 14px;border-radius:20px;font-weight:600;font-size:14.5px}
@@ -467,6 +486,182 @@ function renderProfiel(){
   svg.innerHTML=s;
 }
 
+/* ================= kwaliteit van antwoorden (klas 2) ================= */
+const KW_AAN=()=>cfg.versie==="klas2";
+const RX={
+  reden:/\b(omdat|want|doordat|daardoor|zodat|vanwege|daarom|reden)\b/i,
+  geleerd:/\b(geleerd|leerde|geleerd dat|weet (ik )?nu|merk(te)?|ontdekt|snap|begrijp|voortaan|nu doe ik|anders)\b/i,
+  actie:/\b(ik (wil|ga|probeer|zorg|maak|leer|oefen|vraag|plan|zet|lees|kijk|begin|stop|doe)|elke|iedere|wil ik|ga ik)\b/i,
+  hoe:/(\d|\b(door|elke|iedere|per|minstens|keer|zonder|eerst|op tijd|voordat|na school|thuis|in de les|met behulp|samen met|planner|agenda|schema|lijstje)\b)/i,
+  tijd:/(\d|\b(week|weken|maand|maanden|dag|dagen|vakantie|kerst|herfst|voorjaar|mei|zomer|periode|toets|toetsweek|rapport|einde?|eind|januari|februari|maart|april|juni|juli|augustus|september|oktober|november|december|maandag|dinsdag|woensdag|donderdag|vrijdag|weekend|schooljaar|morgen|volgend|binnen)\b)/i,
+  meetbaar:/(\d|\b(als ik|keer|minstens|zonder|niet meer|geen .{0,20} meer|elke|iedere|altijd|cijfer|voldoende|af heb|afheb|op tijd|lukt|kan ik)\b)/i,
+  wie:/\b(mentor|docent|docenten|leraar|lerares|juf|meester|ouders?|moeder|vader|mama|papa|mam|pap|broer|zus|vriend(in)?|vrienden|klasgeno(o|t)|opa|oma|decaan|coach|bijles|huiswerk(klas|begeleiding)|planner|agenda|app|timer|wekker|magister|teams|onenote|telefoon|laptop|mezelf|mijzelf|ik zelf|zelf)\b/i,
+  profiel:/\b(cultuur|economie|natuur|zorg|welzijn|techniek|gezondheid|maatschappij|c&m|e&m|n&g|n&t|cm|em|ng|nt)\b/i,
+  uitzoek:/\b(open ?dag|meeloop|meelopen|vragen|vraag|interview|website|test|opzoeken|zoeken|uitzoeken|praten|gesprek|mentor|decaan|bezoeken|lezen|kijken|stage|bijbaan|filmpje|youtube|ouders|kennis|familie)\b/i,
+  wel:/\b(maar|wel|leuk|interessant|interesse|denk aan|lijkt me|vind ik|graag|houd van|hou van|goed in)\b/i,
+  opleiding:/\b(mbo|hbo|wo|universiteit|uni|hogeschool|opleiding|studie|studeren|werk|baan|beroep|bedrijf|vak|richting|school|academie)\b|(\w{3,}(er|ist|eur|aar|ant|ent|ige|kundige|loog|naut|ier))\b/i,
+  weetniet:/\b(weet (ik )?(het )?(nog )?niet|geen idee|nog niet zeker|twijfel|weet het niet)\b/i
+};
+const VAAG=/^(goed|ok(e|é|ay)?|prima|leuk|nice|weet (ik )?(het )?niet|geen idee|niks|niets|ja|nee|beter|gewoon|normaal|alles|ik weet het niet|idk|-+|\.+|\?+)[.!]?$/i;
+const MELD={
+  kort:"Je antwoord is nog kort. Vertel iets meer.",
+  vaag:"Dit zegt nog niet zoveel. Wat bedoel je precies?",
+  reden:"Waarom? Vertel wat je reden is.",
+  geleerd:"Wat heb je ervan geleerd? Wat doe je nu anders?",
+  actie:"Wat ga je precies dóén? Begin bijvoorbeeld met ‘Ik ga…’.",
+  hoe:"Hoe pak je het aan? Hoe vaak, of op welk moment?",
+  tijd:"Wanneer? Noem een moment, bijvoorbeeld ‘voor de kerstvakantie’.",
+  meetbaar:"Hoe merk je dat het gelukt is? Maak het meetbaar.",
+  wie:"Noem een persoon of hulpmiddel, en wat die voor je doet.",
+  profiel:"Noem het profiel waar het over gaat.",
+  uitzoek:"Hoe ga je het uitzoeken? Bijvoorbeeld een open dag, of iemand iets vragen.",
+  wel:"Wat weet je al wél? Wat vind je leuk of interessant?",
+  opleiding:"Noem een opleiding, werk of richting."
+};
+const WEETNIET_REGEL={min:8,nodig:["wel","uitzoek"],
+  starters:["Ik weet het nog niet precies, maar ik vind … wel interessant.","Ik ga dit uitzoeken door …"],
+  voorbeeld:["Weet ik niet.","Ik weet het nog niet precies, maar ik vind werken met dieren wel interessant. Ik ga dit uitzoeken door in de herfstvakantie een dag mee te lopen bij een dierenarts."]};
+const VRAAGREGELS={
+  trots:{min:6,nodig:["reden"],starters:["Ik ben trots op … omdat …","Dat was best moeilijk, want …"],
+    voorbeeld:["Mijn rapport.","Ik ben trots op mijn cijfer voor wiskunde, omdat ik daar vorig jaar veel moeite mee had en nu elke week extra oefen."]},
+  t1:{min:4,nodig:[],starters:["Vorig jaar werkte ik aan …"],voorbeeld:["Plannen.","Vorig jaar werkte ik aan plannen: ik wilde mijn huiswerk elke dag in mijn agenda zetten."]},
+  t2:{min:8,nodig:["geleerd"],starters:["Het is (een beetje / niet) gelukt, want …","Ik heb geleerd dat …","Nu doe ik … anders."],
+    voorbeeld:["Ja.","Het is half gelukt. In het begin deed ik het elke dag, maar na de vakantie vergat ik het. Ik heb geleerd dat een vast moment helpt, bijvoorbeeld meteen na school."]},
+  kern_2:{min:7,nodig:["actie","hoe"],starters:["Ik ga …","Dat doe ik door …"],
+    voorbeeld:["Ik wil zelfstandiger worden.","Ik ga eerst zelf een oplossing zoeken voordat ik de docent iets vraag, bijvoorbeeld door in mijn boek terug te kijken."]},
+  basis_2:{min:7,nodig:["actie","hoe"],starters:["Ik ga …","Dat doe ik door …"],
+    voorbeeld:["Beter plannen.","Ik ga elke zondag mijn huiswerk voor de hele week in mijn agenda zetten."]},
+  o2:{min:7,nodig:["actie","hoe"],starters:["Ik ga …","Dat doe ik door …"],
+    voorbeeld:["Beter worden in Frans.","Ik ga elke dinsdag en donderdag 15 minuten mijn Franse woordjes oefenen met een app."]},
+  kern_3:{min:5,nodig:["tijd","meetbaar"],starters:["Ik heb dit doel bereikt als …","Voor … wil ik …"],
+    voorbeeld:["Als het goed gaat.","Als ik voor de kerstvakantie drie keer een opdracht helemaal zelf heb afgemaakt."]},
+  basis_3:{min:5,nodig:["tijd","meetbaar"],starters:["Ik heb dit doel bereikt als …","Voor … wil ik …"],
+    voorbeeld:["Als ik beter plan.","Als ik vier weken lang geen huiswerk ben vergeten."]},
+  o3:{min:5,nodig:["tijd","meetbaar"],starters:["Ik heb dit doel bereikt als …","Voor … wil ik …"],
+    voorbeeld:["Bij de toets.","Als ik bij de volgende toets Frans een 6,5 of hoger haal."]},
+  kern_4:{min:5,nodig:["wie"],starters:["Ik heb … nodig, omdat …","… kan mij helpen door …"],
+    voorbeeld:["Niemand.","Mijn mentor, die elke twee weken met mij kijkt hoe het gaat."]},
+  basis_4:{min:5,nodig:["wie"],starters:["Ik heb … nodig, omdat …","… kan mij helpen door …"],
+    voorbeeld:["Mijn agenda.","Mijn agenda, en mijn moeder die op zondag even met mij checkt of alles erin staat."]},
+  o4:{min:5,nodig:["wie"],starters:["Ik heb … nodig, omdat …","… kan mij helpen door …"],
+    voorbeeld:["Een app.","Een woordjes-app op mijn telefoon, en mijn docent Frans aan wie ik vraag welke woorden het belangrijkst zijn."]},
+  o1:{min:2,nodig:[],starters:[],voorbeeld:["School.","Frans, vooral de woordjes."]},
+  p1:{min:10,nodig:["profiel","reden"],starters:["Het profiel … trekt mij het meest, omdat …","Dat merk ik aan …"],
+    voorbeeld:["N&G lijkt me leuk.","Natuur & Gezondheid trekt mij het meest, omdat ik biologie het leukste vak vind en later iets in de zorg wil doen."]},
+  p2:{min:6,nodig:["uitzoek"],starters:["Ik wil nog uitzoeken …","Dat ga ik doen door …"],
+    voorbeeld:["Niks.","Ik wil weten hoe zwaar natuurkunde wordt. Dat ga ik vragen aan een leerling uit de bovenbouw."]},
+  later:{min:5,nodig:["reden"],starters:["Later wil ik graag … omdat …","Het lijkt me leuk om … te doen, want …"],
+    voorbeeld:["Iets met dieren.","Later wil ik graag dierenarts worden, omdat ik het fijn vind om voor dieren te zorgen en biologie mijn beste vak is."],weetniet:WEETNIET_REGEL},
+  opleiding:{min:6,nodig:["opleiding","reden"],starters:["De opleiding … spreekt mij aan, omdat …","Ik zou graag werken als …, want …"],
+    voorbeeld:["Iets op het hbo.","De opleiding diergeneeskunde aan de universiteit spreekt mij aan, omdat je daar veel leert over hoe het lichaam van dieren werkt."],weetniet:WEETNIET_REGEL},
+  past:{min:5,nodig:["profiel","reden"],starters:["Daarbij past het profiel …, omdat …"],
+    voorbeeld:["N&G.","Daarbij past Natuur & Gezondheid, omdat je voor diergeneeskunde biologie en scheikunde nodig hebt."],
+    weetniet:{min:6,nodig:["uitzoek"],starters:["Dat weet ik nog niet. Ik ga het uitzoeken door …"],voorbeeld:["Weet ik niet.","Dat weet ik nog niet. Ik ga op de website van de opleiding kijken welke vakken je nodig hebt."]}}
+};
+function regelVoor(key,tekst){const r=VRAAGREGELS[key];if(!r)return null;return(r.weetniet&&RX.weetniet.test(tekst))?r.weetniet:r}
+function beoordeel(key,tekst){
+  tekst=(tekst||"").trim();const r=regelVoor(key,tekst);
+  if(!KW_AAN()||!r||!tekst)return{ok:true,missen:[],regel:r};
+  const woorden=tekst.split(/\s+/).filter(w=>/\w/.test(w)).length,missen=[];
+  if(VAAG.test(tekst))missen.push(MELD.vaag);
+  else if(woorden<r.min)missen.push(MELD.kort);
+  r.nodig.forEach(n=>{if(!RX[n].test(tekst))missen.push(MELD[n])});
+  return{ok:!missen.length,missen:missen.slice(0,2),regel:r};
+}
+function kwVeldHtml(key){
+  if(!KW_AAN()||!VRAAGREGELS[key])return"";
+  return`<button type="button" class="tipknop" data-tipknop="${key}" hidden aria-expanded="false">💡 tip</button>`;
+}
+function tipVakHtml(key){return KW_AAN()&&VRAAGREGELS[key]?`<div class="tipvak" data-tipvak="${key}" hidden></div>`:""}
+function vulTipVak(key){
+  const vak=document.querySelector(`[data-tipvak="${key}"]`);if(!vak)return;
+  const b=beoordeel(key,st.v[key]),r=b.regel;
+  vak.innerHTML=`${b.missen.length?`<ul>${b.missen.map(m=>`<li>${esc(m)}</li>`).join("")}</ul>`:""}
+    ${r.starters.length?`<div class="tiprij"><span>Begin zo:</span>${r.starters.map((s,i)=>`<button type="button" class="starter" data-starter="${i}">${esc(s)}</button>`).join("")}</div>`:""}
+    <details><summary>Bekijk een voorbeeld</summary><p class="zwak">✗ ${esc(r.voorbeeld[0])}</p><p class="sterk">✓ ${esc(r.voorbeeld[1])}</p></details>`;
+  vak.querySelectorAll('[data-starter]').forEach(btn=>btn.onclick=()=>{
+    const el=document.getElementById('f_'+key),s=r.starters[+btn.dataset.starter];
+    const nieuw=(el.value.trim()?el.value.replace(/\s*$/," "):"")+s;
+    el.value=nieuw.slice(0,el.maxLength);el.dispatchEvent(new Event('input'));el.focus();
+    const pos=el.value.indexOf("…");if(pos>=0)el.setSelectionRange(pos,pos+1);
+  });
+}
+function werkTipBij(key,direct){
+  const knop=document.querySelector(`[data-tipknop="${key}"]`);if(!knop)return;
+  const run=()=>{
+    const tekst=(st.v[key]||"").trim(),b=beoordeel(key,tekst),toon=!!tekst&&!b.ok;
+    knop.hidden=!toon;
+    const vak=document.querySelector(`[data-tipvak="${key}"]`);
+    if(!toon){vak.hidden=true;knop.setAttribute('aria-expanded','false')}
+    else if(!vak.hidden)vulTipVak(key);
+  };
+  clearTimeout(werkTipBij["t"+key]);
+  if(direct)run();else werkTipBij["t"+key]=setTimeout(run,1100);
+}
+function koppelTips(){
+  if(!KW_AAN())return;
+  document.querySelectorAll('#kaart [data-tipknop]').forEach(knop=>{
+    const key=knop.dataset.tipknop,el=document.getElementById('f_'+key),vak=document.querySelector(`[data-tipvak="${key}"]`);
+    knop.onclick=()=>{const open=vak.hidden;if(open)vulTipVak(key);vak.hidden=!open;knop.setAttribute('aria-expanded',String(open))};
+    el.addEventListener('input',()=>werkTipBij(key,false));
+    el.addEventListener('blur',()=>werkTipBij(key,true));
+    werkTipBij(key,true);
+  });
+}
+function zwakkeVelden(stap){
+  if(!KW_AAN())return[];
+  const keys=stap.type==="doel"?[2,3,4].map(n=>stap.id+"_"+n):stap.type==="velden"?stap.velden.map(v=>v[0]):(stap.vragen||[]).map(v=>v[0]);
+  return keys.filter(k=>(st.v[k]||"").trim()&&!beoordeel(k,st.v[k]).ok);
+}
+
+/* ================= hulp bij 'Mijn toekomst' ================= */
+const INTERESSES=[
+  ["mensen","Mensen helpen en zorgen","🤝","Zorg en welzijn","verpleegkundige, verzorgende, fysiotherapeut, pedagogisch medewerker, maatschappelijk werker",["Zorg & welzijn","Natuur & Gezondheid"]],
+  ["dieren","Dieren en natuur","🐾","Dieren, natuur en groen","dierenarts, dierverzorger, hovenier, boswachter, bioloog",["Natuur & Gezondheid"]],
+  ["techniek","Techniek en bouwen","🔧","Techniek en bouw","elektricien, monteur, werktuigbouwkundige, architect, ingenieur",["Natuur & Techniek"]],
+  ["ict","Computers en ICT","💻","ICT en digitaal","programmeur, systeembeheerder, game-developer, data-analist",["Natuur & Techniek","Economie & Maatschappij"]],
+  ["creatief","Creatief zijn en ontwerpen","🎨","Kunst, media en ontwerp","grafisch vormgever, fotograaf, interieurontwerper, mediamaker",["Cultuur & Maatschappij"]],
+  ["geld","Cijfers, geld en handel","📊","Economie en handel","accountant, ondernemer, bankmedewerker, marketeer, inkoper",["Economie & Maatschappij","Economie"]],
+  ["taal","Taal en communicatie","💬","Taal, communicatie en onderwijs","journalist, leraar, vertaler, communicatieadviseur",["Cultuur & Maatschappij","Economie & Maatschappij"]],
+  ["sport","Sport en bewegen","⚽","Sport en gezondheid","sportinstructeur, fysiotherapeut, gymdocent, personal trainer",["Natuur & Gezondheid","Zorg & welzijn"]],
+  ["leiden","Regelen en leiding geven","📋","Organisatie en management","manager, evenementenorganisator, projectleider, ondernemer",["Economie & Maatschappij","Economie"]],
+  ["onderzoek","Onderzoeken en uitzoeken","🔬","Onderzoek en wetenschap","laborant, onderzoeker, apotheker, scheikundige",["Natuur & Gezondheid","Natuur & Techniek"]],
+  ["recht","Veiligheid en recht","⚖️","Veiligheid, recht en overheid","politieagent, advocaat, beveiliger, jurist",["Cultuur & Maatschappij","Economie & Maatschappij"]],
+  ["eten","Eten en gastvrijheid","🍳","Horeca en toerisme","kok, hotelmanager, reisadviseur, bakker",["Economie","Economie & Maatschappij"]]
+];
+function profielenInKlas(){
+  const k=parseKlassen().find(x=>x.naam===st.klas);if(!k)return[];
+  return k.groepen.flat().map(n=>({naam:n.replace(/\s*\(.*?\)\s*$/,"").trim(),tag:tagVan(n)}));
+}
+function topVakken(){
+  return vakNamen().map(v=>({v:kaal(v),t:st.talent[sleutel(v)]||0,p:st.passie[sleutel(v)]||0}))
+    .filter(x=>x.t>=6&&x.p>=6).sort((a,b)=>(b.t+b.p)-(a.t+a.p)).slice(0,3);
+}
+function hulpToekomstHtml(){
+  return`<button type="button" class="hulplink" id="hulpOpen">🧭 Weet je het nog niet? Hulp bij nadenken</button><div class="hulpvak" id="hulpVak" hidden></div>`;
+}
+function tekenHulpToekomst(){
+  const vak=$('#hulpVak');if(!vak)return;
+  const gekozen=st.v.interesses||[],inKlas=profielenInKlas(),top=topVakken();
+  const pnaam=n=>{const m=inKlas.filter(p=>p.naam===n);return m.length?m.map(p=>p.naam+(p.tag?` (${p.tag})`:"")).join(", "):""};
+  const res=INTERESSES.filter(i=>gekozen.includes(i[0]));
+  vak.innerHTML=`<p><b>1. Wat vind je interessant?</b> Kies er maximaal drie.</p>
+    <div class="chips">${INTERESSES.map(i=>`<button type="button" data-int="${i[0]}" class="${gekozen.includes(i[0])?"aan":""}" ${!gekozen.includes(i[0])&&gekozen.length>=3?"disabled":""}>${i[2]} ${esc(i[1])}</button>`).join("")}</div>
+    ${top.length?`<p style="margin-top:16px"><b>Uit jouw vakken:</b> je hebt talent én passie voor <b>${esc(top.map(x=>x.v).join(", "))}</b>. Neem dat mee in je keuze.</p>`:""}
+    ${res.length?`<p style="margin-top:16px"><b>2. Dit past erbij</b></p><div class="hulpres">${res.map(i=>{const pr=i[5].map(pnaam).filter(Boolean);
+      return`<div><b>${i[2]} ${esc(i[3])}</b><span>Bijvoorbeeld: ${esc(i[4])}</span>${pr.length?`<span>Past bij: ${esc([...new Set(pr)].join(", "))}</span>`:""}</div>`}).join("")}</div>`:""}
+    <p style="margin-top:16px"><b>${res.length?"3":"2"}. Hoe kom je er meer over te weten?</b></p>
+    <ul class="hulplijst"><li>Vraag iemand die dit werk doet hoe een werkdag eruitziet.</li><li>Ga naar een open dag of meeloopdag.</li><li>Praat met je mentor of de decaan.</li><li>Zoek een filmpje over het beroep op.</li></ul>
+    <p class="uitleg" style="margin:10px 0 0">Schrijf je antwoorden hieronder in je eigen woorden. Twijfel je nog? Dat mag! Schrijf dan op wat je al wél weet en hoe je het gaat uitzoeken.</p>`;
+  vak.querySelectorAll('[data-int]').forEach(b=>b.onclick=()=>{
+    const l=st.v.interesses||[],k=b.dataset.int;st.v.interesses=l.includes(k)?l.filter(x=>x!==k):l.concat(k).slice(0,3);bewaar();tekenHulpToekomst();
+  });
+}
+function koppelHulpToekomst(){
+  const k=$('#hulpOpen');if(!k)return;
+  k.onclick=()=>{const v=$('#hulpVak');v.hidden=!v.hidden;if(!v.hidden)tekenHulpToekomst();k.classList.toggle('open',!v.hidden)};
+}
+
 
 /* ================= hulp ================= */
 const $=s=>document.querySelector(s);
@@ -476,11 +671,11 @@ function zorgKlas(){const ks=klasOpties();if(!ks.includes(st.klas))st.klas=ks[0]
 const kernLijst=()=>cfg.dalton.paren.map(p=>kaal(p[0]));
 const basisLijst=()=>cfg.dalton.paren.map(p=>kaal(p[1]));
 function tekstVeld(key,label,lang,max){
-  const v=st.v[key]||"",m=max||(lang?220:70);
+  const v=st.v[key]||"",m=max?(KW_AAN()&&lang&&max>=180?300:max):(lang?(KW_AAN()?300:220):70);
   return`<div class="veld"><label for="f_${key}">${esc(label)}</label>${lang
     ?`<textarea id="f_${key}" data-key="${key}" maxlength="${m}">${esc(v)}</textarea>`
     :`<input type="text" id="f_${key}" data-key="${key}" maxlength="${m}" value="${esc(v)}" autocomplete="off">`}
-    <div class="teller" data-teller="${key}">${v.length}/${m}</div></div>`;
+    <div class="onderrij">${kwVeldHtml(key)}<div class="teller" data-teller="${key}">${v.length}/${m}</div></div>${tipVakHtml(key)}</div>`;
 }
 function koppelVelden(){
   document.querySelectorAll('#kaart [data-key]').forEach(el=>el.addEventListener('input',()=>{
@@ -533,6 +728,7 @@ function tekenStap(){
   const S=stappen();if(st.stap>=S.length)st.stap=0;
   const stap=S[st.stap],k=$('#kaart');
   let h=`<h2>${esc(stap.titel)}</h2>${stap.uitleg?`<p class="uitleg">${esc(stap.uitleg)}</p>`:""}`;
+  if(stap.id==="toekomst"&&KW_AAN())h+=`<p class="uitleg">Weet je het nog niet precies? Dat is niet erg. Schrijf op wat je al wél weet.</p>`+hulpToekomstHtml();
   switch(stap.type){
     case"titel":
       h+=tekstVeld("naam","Wat is je naam?",0,40)+tekstVeld("klasnaam","In welke klas zit je?",0,20);
@@ -570,7 +766,7 @@ function tekenStap(){
     case"klaar":{
       const open=S.filter(s=>s.type!=="klaar"&&s.type!=="afsluiting");
       h+=`<p class="uitleg">Download je presentatie. Daarna kun je hem in PowerPoint openen en een persoonlijk tintje geven, bijvoorbeeld met een foto.</p>
-      <ul class="lijst">${open.map(s=>`<li>${ingevuld(s)?`<span class="ok">✓</span>`:`<span class="leeg">!</span>`} ${esc(s.kort)}${ingevuld(s)?"":` <span style="color:var(--zacht);font-size:14px">— nog niet helemaal ingevuld</span>`}</li>`).join("")}</ul>
+      <ul class="lijst">${open.map(s=>{const zw=zwakkeVelden(s).length,i=S.indexOf(s);return`<li>${ingevuld(s)?`<span class="ok">✓</span>`:`<span class="leeg">!</span>`} ${esc(s.kort)}${ingevuld(s)?(zw?` <span class="sterker">— ${zw===1?"één antwoord kan":zw+" antwoorden kunnen"} nog sterker · <a data-ganaar="${i}">bekijk</a></span>`:""):` <span class="sterker">— nog niet helemaal ingevuld · <a data-ganaar="${i}">bekijk</a></span>`}</li>`}).join("")}</ul>
       <button class="geel groot" id="dlPptx">⬇ Download mijn PowerPoint</button>
       <div class="backupblok"><p><b>Wil je later nog iets veranderen?</b> Sla dan ook een backup op. Daarmee kun je altijd verder, ook op een andere laptop.</p>
         <div class="rij"><button class="sec" data-backup="opslaan">💾 Backup opslaan</button></div></div>`;
@@ -579,7 +775,8 @@ function tekenStap(){
   const laatste=st.stap===S.length-1;
   h+=`<div class="nav"><button class="sec" id="vorige" ${st.stap===0?"hidden":""}>← Vorige</button><span></span>${laatste?"":`<button id="volgende">Volgende →</button>`}</div>`;
   k.innerHTML=h;
-  koppelVelden();koppelKopieer();
+  koppelVelden();koppelKopieer();koppelTips();koppelHulpToekomst();
+  document.querySelectorAll('#kaart [data-ganaar]').forEach(a=>a.onclick=()=>gaNaar(+a.dataset.ganaar));
   if($('#vorige'))$('#vorige').onclick=()=>gaNaar(st.stap-1);
   if($('#volgende'))$('#volgende').onclick=()=>gaNaar(st.stap+1);
   if($('#f_soort'))$('#f_soort').onchange=e=>{st.klas=e.target.value;bewaar();if(stap.type==="profiel"){renderProfiel()}};
@@ -647,7 +844,9 @@ function inhoudDia(pres,titel){
   return s;
 }
 const ant=k=>(st.v[k]||"").toString().trim();
-function vraagRuns(paren,{nummer=false,grootte=20}={}){
+function pasGrootte(paren,basis,ruimte){const n=paren.reduce((s,[q,a])=>s+q.length+(a||"").length,0)+paren.length*40;return n>ruimte*1.5?Math.max(13,basis-6):n>ruimte*1.15?basis-4:n>ruimte?basis-2:basis}
+function vraagRuns(paren,{nummer=false,grootte=0,ruimte=520}={}){
+  grootte=grootte?pasGrootte(paren,grootte,ruimte):pasGrootte(paren,20,ruimte);
   const runs=[];
   paren.forEach(([vraag,antwoord],i)=>{
     runs.push({text:(nummer?(i+1)+". ":"")+vraag,options:{breakLine:true,fontSize:grootte,color:"000000"}});
@@ -698,7 +897,7 @@ async function maakPptx(){
           const s=inhoudDia(pres,stap.titel),p=await plaatje("svgProfiel");
           let h=5.35,w=h*p.ratio;if(w>6.3){w=6.3;h=w/p.ratio}
           s.addImage({data:p.data,x:0.92,y:1.85,w,h});
-          tekstvak(s,vraagRuns(stap.vragen.map(([k,q])=>[q,ant(k)]),{grootte:18}),{x:7.6,w:4.85,y:1.95,h:5.0});break;}
+          tekstvak(s,vraagRuns(stap.vragen.map(([k,q])=>[q,ant(k)]),{grootte:18,ruimte:260}),{x:7.6,w:4.85,y:1.95,h:5.0});break;}
         case"afsluiting":{
           const s=pres.addSlide();s.background={color:HG};
           s.addText(stap.titel,{x:0.92,y:0.38,w:11.5,h:1.38,fontFace:HF,fontSize:60,bold:true,color:"FFFFFF",valign:"middle",margin:0,isTextBox:true});
