@@ -57,7 +57,6 @@ section#kaart{flex:1 1 auto;min-width:0;background:var(--card);border-radius:14p
 .hulplijst{margin:0;padding-left:20px}.hulplijst li{margin:2px 0}
 .steun{border:0;padding:0;margin:0 0 6px}.steun legend{font-weight:700;font-size:15.5px;padding:0;margin:0 0 8px}
 .steun .veld{margin:0 0 10px 18px}.steun .veld label{font-weight:600;font-size:14.5px}.steun textarea{min-height:58px}
-.mailblok{border-top:1.5px solid var(--paars-l);margin-top:22px;padding-top:16px}.mailblok p{margin:0 0 8px}.mailblok .veld{max-width:420px}
 .doelrecap{border:1.5px solid var(--paars-l);border-radius:10px;padding:10px 14px;margin:0 0 14px;font-size:15px}.doelrecap span{display:block;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--zacht)}
 .veld p.groep{margin:10px 0 6px;font-size:13px;font-weight:700;color:var(--zacht)}.veld p.groep:first-of-type{margin-top:2px}
 .veld .max{font-weight:400;color:var(--zacht);font-size:13.5px}
@@ -793,12 +792,6 @@ function tekenStap(){
       h+=`<p class="uitleg">Download je presentatie. Daarna kun je hem in PowerPoint openen en een persoonlijk tintje geven, bijvoorbeeld met een foto.</p>
       <ul class="lijst">${open.map(s=>{const zw=zwakkeVelden(s).length,i=S.indexOf(s);return`<li>${ingevuld(s)?`<span class="ok">✓</span>`:`<span class="leeg">!</span>`} ${esc(s.kort)}${ingevuld(s)?(zw?` <span class="sterker">— ${zw===1?"één antwoord kan":zw+" antwoorden kunnen"} nog sterker · <a data-ganaar="${i}">bekijk</a></span>`:""):` <span class="sterker">— nog niet helemaal ingevuld · <a data-ganaar="${i}">bekijk</a></span>`}</li>`}).join("")}</ul>
       <div class="rij" style="align-items:center;gap:12px"><button class="geel groot" id="dlPptx">⬇ Download mijn PowerPoint</button></div>
-      <div class="mailblok">
-        <p><b>Of stuur hem meteen naar je mentor</b></p>
-        ${cfg.mentorMail?`<p class="uitleg" style="margin:0 0 10px">Naar: ${esc(cfg.mentorMail)}</p>`:tekstVeld("mentormail","E-mailadres van je mentor",0,80)}
-        <div class="rij" style="margin-top:0"><button class="sec" id="mailPptx">✉ Mail naar mijn mentor</button>${kanDelen()?`<button class="sec" id="deelPptx">↗ Delen via…</button>`:""}</div>
-        <div class="tip" id="mailUitleg" hidden style="margin:12px 0 0">📎 Er is een nieuwe mail geopend en je PowerPoint is gedownload als <b id="mailBestand"></b>. Klik in de mail op <b>Bijvoegen</b> (paperclip) en kies het bestand uit je map <b>Downloads</b>. Daarna op <b>Verzenden</b>.</div>
-      </div>
       <div class="backupblok"><p><b>Wil je later nog iets veranderen?</b> Sla dan ook een backup op. Daarmee kun je altijd verder, ook op een andere laptop.</p>
         <div class="rij"><button class="sec" data-backup="opslaan">💾 Backup opslaan</button></div></div>`;
       break;}
@@ -827,7 +820,7 @@ function tekenStap(){
     toon();document.querySelectorAll('#weergave button').forEach(b=>b.onclick=()=>{weergave=b.dataset.w;document.querySelectorAll('#weergave button').forEach(x=>x.classList.toggle('actief',x===b));toon()});
   }
   if(stap.type==="profiel"){plaats("svgProfiel",$('#plek'));renderProfiel()}
-  if(stap.type==="klaar"){$('#dlPptx').onclick=maakPptx;$('#mailPptx').onclick=mailMentor;if($('#deelPptx'))$('#deelPptx').onclick=deelPptx}
+  if(stap.type==="klaar"){$('#dlPptx').onclick=maakPptx}
   document.querySelectorAll('#kaart [data-backup]').forEach(b=>b.onclick=()=>b.dataset.backup==="opslaan"?backupOpslaan():$('#backupBestand').click());
   tekenNav();
 }
@@ -1009,43 +1002,7 @@ async function bouwPptx(){
   }
 }
 
-/* ================= mailen naar mentor ================= */
-const PPTX_MIME="application/vnd.openxmlformats-officedocument.presentationml.presentation";
-function mentorMail(){return(cfg.mentorMail||ant("mentormail")).trim()}
-function mailUrl(){
-  const naam=ant("naam"),klas=ant("klasnaam"),to=mentorMail();
-  const onderwerp="POP-presentatie "+[naam,klas].filter(Boolean).join(" ");
-  const tekst="Beste mentor,\n\nIn de bijlage stuur ik mijn POP-presentatie.\n\nMet vriendelijke groet,\n"+(naam||"");
-  const e=encodeURIComponent;
-  switch(cfg.mailDienst||"outlook"){
-    case"gmail":return`https://mail.google.com/mail/?view=cm&fs=1&to=${e(to)}&su=${e(onderwerp)}&body=${e(tekst)}`;
-    case"mailto":return`mailto:${e(to)}?subject=${e(onderwerp)}&body=${e(tekst)}`;
-    default:return`https://outlook.office.com/mail/deeplink/compose?to=${e(to)}&subject=${e(onderwerp)}&body=${e(tekst)}`;
-  }
-}
-const geldigMail=m=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(m);
-async function mailMentor(){
-  const to=mentorMail();
-  if(!geldigMail(to)){toast("Vul eerst het e-mailadres van je mentor in.");const f=$('#f_mentormail');if(f)f.focus();return}
-  const knop=$('#mailPptx');knop.disabled=true;knop.textContent="Bezig…";
-  const url=mailUrl(),venster=(cfg.mailDienst||"outlook")==="mailto"?null:window.open("about:blank","_blank");
-  try{
-    const pres=await bouwPptx(),naam=bestandsnaamPptx();
-    await pres.writeFile({fileName:naam});
-    if(venster)venster.location.href=url;else location.href=url;
-    $('#mailUitleg').hidden=false;$('#mailBestand').textContent=naam;
-    toast("Je mail staat klaar. Voeg nu je PowerPoint toe als bijlage.");
-  }catch(e){console.error(e);if(venster)venster.close();toast("Er ging iets mis bij het maken van de PowerPoint.")}
-  finally{knop.disabled=false;knop.textContent="✉ Mail naar mijn mentor"}
-}
-async function deelPptx(){
-  try{
-    const pres=await bouwPptx(),blob=await pres.write({outputType:"blob"});
-    const file=new File([blob],bestandsnaamPptx(),{type:PPTX_MIME});
-    await navigator.share({files:[file],title:"Mijn POP-presentatie",text:"Mijn POP-presentatie"});
-  }catch(e){if(e&&e.name!=="AbortError")toast("Delen lukt niet op deze laptop. Gebruik ‘Mail naar mijn mentor’.")}
-}
-function kanDelen(){try{return!!(navigator.canShare&&navigator.canShare({files:[new File(["x"],"t.pptx",{type:PPTX_MIME})]}))}catch(e){return false}}
+
 
 /* ================= backup ================= */
 const BACKUP_SOORT="pop-gesprek-backup";
