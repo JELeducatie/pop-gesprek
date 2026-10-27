@@ -1073,13 +1073,6 @@ $('#backupBestand').onchange=e=>{const f=e.target.files[0];e.target.value="";if(
 window.addEventListener('dragover',e=>e.preventDefault());
 window.addEventListener('drop',e=>{const f=e.dataTransfer&&e.dataTransfer.files[0];if(f&&/\.(pop|json)$/i.test(f.name)){e.preventDefault();backupInlezen(f)}});
 
-/* ================= instellingen via de link ================= */
-// Mentoren delen een eigen link, bv. klas2.html?mentor=naam@school.nl (&mail=gmail of mailto)
-try{
-  const q=new URLSearchParams(location.search),m=(q.get("mentor")||"").trim(),d=q.get("mail");
-  if(geldigMail(m))cfg.mentorMail=m;
-  if(["outlook","gmail","mailto"].includes(d))cfg.mailDienst=d;
-}catch(e){}
 
 $('#versieLabel').textContent=cfg.versie==="klas1"?"Klas 1":"Klas 2";
 migreerSteun();bewaar();
