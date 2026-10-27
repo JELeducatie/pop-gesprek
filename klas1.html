@@ -85,14 +85,6 @@ svg.vis .cel:hover{opacity:.65}
 .lijst .ok{color:#2E7D32;font-weight:800}.lijst .leeg{color:#C46A16;font-weight:800}
 .groot{font-size:18px;padding:14px 26px}
 #werk{display:none}
-#mentor{position:fixed;inset:0;background:rgba(40,10,32,.45);display:none;align-items:flex-start;justify-content:center;padding:30px 12px;overflow:auto;z-index:20}
-#mentor.open{display:flex}
-#mentor .paneel{background:#fff;border-radius:14px;padding:20px 22px;max-width:620px;width:100%}
-#mentor h2{margin:0 0 6px;color:var(--paars)}
-#mentor h3{margin:16px 0 4px;font-size:15px;color:var(--paars)}
-#mentor p{font-size:13px;color:var(--zacht);margin:4px 0 8px}
-#mentor textarea,#mentor input[type=text],#mentor select{width:100%;padding:8px 10px;border:1.5px solid var(--rand);border-radius:8px;font:inherit;font-size:13.5px}
-#mentor textarea{font-family:Consolas,monospace;font-size:12.5px;min-height:100px}
 .rij{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
 #toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#2a1f27;color:#fff;padding:12px 18px;border-radius:10px;opacity:0;transition:opacity .3s;pointer-events:none;font-size:14.5px;max-width:90vw;text-align:center;z-index:30}
 #toast.show{opacity:1}
@@ -108,7 +100,6 @@ svg.vis .cel:hover{opacity:.65}
   <button class="ghost" id="backupOpslaan" title="Sla je antwoorden op als bestand">💾 Backup opslaan</button>
   <button class="ghost" id="backupOpenen" title="Ga verder met een opgeslagen backup">📂 Backup openen</button>
   <input type="file" id="backupBestand" accept=".pop,.json,application/json" hidden>
-  <button class="ghost" id="mentorKnop">⚙ Mentor</button>
 </header>
 <div class="layout">
   <nav id="stappen"></nav>
@@ -120,7 +111,6 @@ svg.vis .cel:hover{opacity:.65}
   <svg class="vis" id="svgKwadrant" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1180"></svg>
   <svg class="vis" id="svgProfiel" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800"></svg>
 </div>
-<div id="mentor"><div class="paneel" id="mentorInhoud"></div></div>
 <div id="toast"></div>
 
 <script id="pptxlib">/* PptxGenJS 4.0.1 @ 2025-06-25T23:35:35.101Z */
@@ -1083,57 +1073,13 @@ $('#backupBestand').onchange=e=>{const f=e.target.files[0];e.target.value="";if(
 window.addEventListener('dragover',e=>e.preventDefault());
 window.addEventListener('drop',e=>{const f=e.dataTransfer&&e.dataTransfer.files[0];if(f&&/\.(pop|json)$/i.test(f.name)){e.preventDefault();backupInlezen(f)}});
 
-/* ================= mentor ================= */
-$('#mentorKnop').onclick=()=>{$('#mentor').classList.add('open');bouwMentor()};
-$('#mentor').onclick=e=>{if(e.target.id==="mentor")$('#mentor').classList.remove('open')};
-function bouwMentor(){
-  const D=cfg.dalton;
-  $('#mentorInhoud').innerHTML=`<h2>Mentor-instellingen</h2>
-  <p>Pas aan wat leerlingen te zien krijgen, klik op <b>Toepassen</b> en download daarna je eigen versie om te delen.</p>
-  <h3>Versie</h3><select id="m_versie"><option value="klas1" ${cfg.versie==="klas1"?"selected":""}>Klas 1</option><option value="klas2" ${cfg.versie==="klas2"?"selected":""}>Klas 2</option></select>
-  <h3>Mailen naar de mentor</h3>
-  <p>Vul je e-mailadres in, dan hoeven leerlingen dat niet zelf te doen. Leeg laten = leerling vult het zelf in.</p>
-  <input type="text" id="m_mail" value="${esc(cfg.mentorMail||"")}" placeholder="naam@school.nl">
-  <select id="m_dienst" style="margin-top:6px"><option value="outlook" ${(cfg.mailDienst||"outlook")==="outlook"?"selected":""}>Outlook (Microsoft 365, in de browser)</option><option value="gmail" ${cfg.mailDienst==="gmail"?"selected":""}>Gmail (Google Workspace)</option><option value="mailto" ${cfg.mailDienst==="mailto"?"selected":""}>Standaard mailprogramma van de laptop</option></select>
-  <h3>IK-rapport (vaardighedenwiel)</h3>
-  <p>Eén paar per regel: <i>kernwaarde ; tegenover liggende basisvaardigheid</i>. Gebruik | voor een nieuwe regel in het wiel.</p>
-  <textarea id="m_paren">${esc(D.paren.map(p=>p[0]+" ; "+p[1]).join("\n"))}</textarea>
-  <h3>Vakken (één per regel)</h3><textarea id="m_vakken">${esc(cfg.vakken.join("\n"))}</textarea>
-  <div ${cfg.versie==="klas1"?"hidden":""}>
-  <h3>Profielen</h3><p>Eén profiel per regel: <i>Naam: vak, vak*2</i>. *2 telt een vak dubbel.</p><textarea id="m_prof">${esc(cfg.profielen)}</textarea>
-  <h3>Klassen en hun profielen</h3><p>Eén klas per regel: <i>klas = profiel | profiel</i>. Met <b>+</b> komen profielen samen in één kaart.</p><textarea id="m_klas">${esc(cfg.klassen)}</textarea>
-  </div>
-  <div class="rij"><button id="m_ok">Toepassen</button><button class="sec" id="m_wis">Wis alle antwoorden</button><button class="sec" id="m_sluit">Sluiten</button></div>
-  <div class="rij"><button class="geel" id="m_dl">⬇ Download deze versie voor leerlingen</button></div>
-  <p>Dit maakt een nieuw HTML-bestand met jouw instellingen. Deel het via Magister, Teams of mail; leerlingen openen het met dubbelklik.</p>`;
-  $('#m_sluit').onclick=()=>$('#mentor').classList.remove('open');
-  $('#m_versie').onchange=e=>{const v=e.target.value;const n=standaard(v);n.dalton=cfg.dalton;n.profielen=cfg.profielen;n.klassen=cfg.klassen;n.mentorMail=cfg.mentorMail;n.mailDienst=cfg.mailDienst;cfg=n;herlaadStatus();bouwMentor()};
-  $('#m_ok').onclick=()=>{
-    const paren=$('#m_paren').value.split("\n").map(r=>r.split(";").map(x=>x.trim())).filter(r=>r[0]);
-    const vakken=$('#m_vakken').value.split("\n").map(x=>x.trim()).filter(Boolean);
-    if(paren.length<2||vakken.length<3){toast("Geef minstens twee paren en drie vakken op.");return}
-    cfg.dalton.paren=paren.slice(0,6).map(p=>[p[0],p[1]||""]);cfg.vakken=vakken;
-    const mm=$('#m_mail').value.trim();if(mm&&!geldigMail(mm)){toast("Het e-mailadres klopt niet.");return}
-    cfg.mentorMail=mm;cfg.mailDienst=$('#m_dienst').value;
-    if($('#m_prof')){cfg.profielen=$('#m_prof').value;cfg.klassen=$('#m_klas').value}
-    tekenStap();toast("Toegepast.");
-  };
-  $('#m_wis').onclick=()=>{if(!confirm("Alle antwoorden op deze laptop wissen?"))return;st={dalton:{boven:[],onder:[],dBoven:[],dOnder:[]},talent:{},passie:{},klas:"",v:{},stap:0};bewaar();tekenStap();toast("Gewist.")};
-  $('#m_dl').onclick=()=>{
-    document.getElementById('config').textContent=JSON.stringify(cfg).replace(/</g,"\\u003c");
-    $('#mentor').classList.remove('open');terugNaarWerk();
-    const html="<!DOCTYPE html>\n"+document.documentElement.outerHTML;
-    tekenStap();$('#mentor').classList.add('open');
-    const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([html],{type:"text/html"}));a.download="pop-gesprek-"+cfg.versie+".html";document.body.appendChild(a);a.click();a.remove();
-    toast("Bestand gedownload. Deel dit met je leerlingen.");
-  };
-}
-function herlaadStatus(){
-  const key="popgesprek-wizard-"+cfg.versie;
-  st={dalton:{boven:[],onder:[],dBoven:[],dOnder:[]},talent:{},passie:{},klas:"",v:{},stap:0};
-  try{const s=JSON.parse(localStorage.getItem(key)||"null");if(s&&s.dalton)st=Object.assign(st,s)}catch(e){}
-  migreerSteun();$('#versieLabel').textContent=cfg.versie==="klas1"?"Klas 1":"Klas 2";tekenStap();
-}
+/* ================= instellingen via de link ================= */
+// Mentoren delen een eigen link, bv. klas2.html?mentor=naam@school.nl (&mail=gmail of mailto)
+try{
+  const q=new URLSearchParams(location.search),m=(q.get("mentor")||"").trim(),d=q.get("mail");
+  if(geldigMail(m))cfg.mentorMail=m;
+  if(["outlook","gmail","mailto"].includes(d))cfg.mailDienst=d;
+}catch(e){}
 
 $('#versieLabel').textContent=cfg.versie==="klas1"?"Klas 1":"Klas 2";
 migreerSteun();bewaar();
