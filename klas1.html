@@ -59,6 +59,8 @@ section#kaart{flex:1 1 auto;min-width:0;background:var(--card);border-radius:14p
 .steun .veld{margin:0 0 10px 18px}.steun .veld label{font-weight:600;font-size:14.5px}.steun textarea{min-height:58px}
 .mailblok{border-top:1.5px solid var(--paars-l);margin-top:22px;padding-top:16px}.mailblok p{margin:0 0 8px}.mailblok .veld{max-width:420px}
 .doelrecap{border:1.5px solid var(--paars-l);border-radius:10px;padding:10px 14px;margin:0 0 14px;font-size:15px}.doelrecap span{display:block;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--zacht)}
+.veld p.groep{margin:10px 0 6px;font-size:13px;font-weight:700;color:var(--zacht)}.veld p.groep:first-of-type{margin-top:2px}
+.veld .max{font-weight:400;color:var(--zacht);font-size:13.5px}
 .sterker{color:var(--zacht);font-size:14px}.sterker a{color:var(--paars);cursor:pointer;text-decoration:underline}
 .tip{background:#FFF6D6;border-radius:10px;padding:10px 14px;font-size:14.5px;margin:0 0 16px;color:#5a4400}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
@@ -258,10 +260,10 @@ const STAPPEN={
     {id:"vakken",type:"vakken",titel:"Mijn vakken: talent en passie",kort:"Mijn vakken"},
     {id:"profiel",type:"profiel",titel:"Welk profiel past bij mij?",kort:"Profielen",vragen:[["p1","Welk profiel trekt mij het meest, en waarom?"],["p2","Wat wil ik nog uitzoeken over de profielen?"]]},
     {id:"toekomst",type:"vragen",titel:"Mijn toekomst",kort:"Mijn toekomst",vragen:[["later","Dit wil ik later worden of doen:"],["opleiding","Welke opleiding of welk werk spreekt mij aan?"]]},
-    {id:"doel",type:"form",titel:"Mijn doel",kort:"Mijn doel",uitleg:"Kies één vak waarin je beter wilt presteren. Kijk terug naar je vakken, je profiel en je toekomst.",
-      items:[["d_vak","Bij welk vak wil ik beter presteren?","vak"],["d_wat","Wat wil ik bereiken, en wanneer?",120],["d_waarom","Waarom is dit belangrijk voor mij?",120]]},
-    {id:"aanpak",type:"form",titel:"Zo ga ik het aanpakken",kort:"Mijn aanpak",uitleg:"Welke vaardigheid helpt jou om je doel te halen? Kijk naar je IK-rapport.",
-      items:[["a_vaard","Welke vaardigheid helpt mij het meest om dit doel te halen?","vaardigheid"]],steun:"ap",steunVraag:"Wat ga ik doen, en wie helpt mij?"},
+    {id:"doel",type:"form",titel:"Mijn doel",kort:"Mijn doel",uitleg:"Kies de vakken waarin je jezelf wilt verbeteren. Kijk terug naar je vakken, je profiel en je toekomst.",
+      items:[["d_vak","In welke vakken wil ik mij verbeteren?","vak"],["d_wat","Wat wil ik bereiken, en wanneer?",120],["d_waarom","Waarom is dit belangrijk voor mij?",120]]},
+    {id:"aanpak",type:"form",titel:"Zo ga ik het aanpakken",kort:"Mijn aanpak",uitleg:"Welke vaardigheden helpen jou om je doel te halen? Kijk naar je IK-rapport.",
+      items:[["a_vaard","Welke vaardigheden helpen mij om dit doel te halen?","vaardigheid"]],steun:"ap",steunVraag:"Wat ga ik doen, en wie helpt mij?"},
     AFSLUITING,
     {id:"klaar",type:"klaar",titel:"Klaar!",kort:"Download"}]
 };
@@ -810,7 +812,8 @@ function tekenStap(){
   if($('#volgende'))$('#volgende').onclick=()=>gaNaar(st.stap+1);
   if($('#f_soort'))$('#f_soort').onchange=e=>{st.klas=e.target.value;bewaar();if(stap.type==="profiel"){renderProfiel()}};
   document.querySelectorAll('[data-chips]').forEach(g=>g.querySelectorAll('button').forEach(b=>b.onclick=()=>{
-    const key=g.dataset.chips,l=st.v[key]||[],n=b.dataset.vak;
+    const key=g.dataset.chips,l=st.v[key]||[],n=b.dataset.vak,max=+g.dataset.max||99;
+    if(!l.includes(n)&&l.length>=max){toast(`Kies er maximaal ${max}. Klik eerst een andere uit.`);return}
     st.v[key]=l.includes(n)?l.filter(x=>x!==n):l.concat(n);bewaar();b.classList.toggle('aan');tekenNav();
   }));
   if(stap.type==="wiel"){
@@ -839,12 +842,13 @@ function vaardTip(){
   if(bi>=0)return`In je IK-rapport is het verschil tussen nu en je doel het grootst bij “${L[bi]}”.`;
   return`In je IK-rapport scoor je jezelf het laagst bij “${L[nu.indexOf(Math.min(...nu))]}”.`;
 }
+const MAX_KEUZE=3;
 function keuzeHtml(key,label,soort){
-  const v=st.v[key]||"";
-  const opt=o=>`<option ${v===o?"selected":""}>${esc(o)}</option>`;
-  const lijst=soort==="vak"?vakNamen().map(kaal).map(opt).join(""):
-    `<optgroup label="Dalton kernwaarden">${kernLijst().map(opt).join("")}</optgroup><optgroup label="Basisvaardigheden">${basisLijst().map(opt).join("")}</optgroup>`;
-  return`<div class="veld"><label for="f_${key}">${esc(label)}</label><select id="f_${key}" data-key="${key}"><option value="">— kies —</option>${lijst}</select></div>`;
+  let v=st.v[key]||[];if(!Array.isArray(v))v=st.v[key]=v?[v]:[];
+  const chips=l=>`<div class="chips" data-chips="${key}" data-max="${MAX_KEUZE}">${l.map(o=>`<button type="button" data-vak="${esc(o)}" class="${v.includes(o)?"aan":""}">${esc(o)}</button>`).join("")}</div>`;
+  const inhoud=soort==="vak"?chips(vakNamen().map(kaal)):
+    `<p class="groep">Dalton kernwaarden</p>${chips(kernLijst())}<p class="groep">Basisvaardigheden</p>${chips(basisLijst())}`;
+  return`<div class="veld"><label>${esc(label)} <span class="max">(kies er 1 tot ${MAX_KEUZE})</span></label>${inhoud}</div>`;
 }
 const formKeys=stap=>stap.items.map(i=>i[0]).concat(stap.steun?steunKeys(stap.steun):[]);
 function doelTip(kant){
@@ -907,7 +911,7 @@ function inhoudDia(pres,titel){
 function zijTitel(s,regels,x,y,w){
   s.addText(regels.map((r,i)=>({text:r,options:{breakLine:i<regels.length-1}})),{x,y,w,h:1.9,fontFace:HF,fontSize:48,bold:true,color:HP,valign:"top",margin:0,isTextBox:true,lineSpacingMultiple:0.95});
 }
-const ant=k=>(st.v[k]||"").toString().trim();
+const ant=k=>{const x=st.v[k];return Array.isArray(x)?x.join(", "):(x||"").toString().trim()};
 function pasGrootte(alineas,w,h){
   for(const g of [20,18,16]){const cpl=w*72/(g*0.52),lh=g*1.2/72;
     const hoogte=alineas.reduce((s,[txt,gap])=>s+Math.max(1,Math.ceil(txt.length/cpl))*lh+(gap?g*0.9/72:0),0);
