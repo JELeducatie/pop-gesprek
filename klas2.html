@@ -57,6 +57,7 @@ section#kaart{flex:1 1 auto;min-width:0;background:var(--card);border-radius:14p
 .hulplijst{margin:0;padding-left:20px}.hulplijst li{margin:2px 0}
 .steun{border:0;padding:0;margin:0 0 6px}.steun legend{font-weight:700;font-size:15.5px;padding:0;margin:0 0 8px}
 .steun .veld{margin:0 0 10px 18px}.steun .veld label{font-weight:600;font-size:14.5px}.steun textarea{min-height:58px}
+.mailblok{border-top:1.5px solid var(--paars-l);margin-top:22px;padding-top:16px}.mailblok p{margin:0 0 8px}.mailblok .veld{max-width:420px}
 .sterker{color:var(--zacht);font-size:14px}.sterker a{color:var(--paars);cursor:pointer;text-decoration:underline}
 .tip{background:#FFF6D6;border-radius:10px;padding:10px 14px;font-size:14.5px;margin:0 0 16px;color:#5a4400}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
@@ -783,7 +784,13 @@ function tekenStap(){
       const open=S.filter(s=>s.type!=="klaar"&&s.type!=="afsluiting");
       h+=`<p class="uitleg">Download je presentatie. Daarna kun je hem in PowerPoint openen en een persoonlijk tintje geven, bijvoorbeeld met een foto.</p>
       <ul class="lijst">${open.map(s=>{const zw=zwakkeVelden(s).length,i=S.indexOf(s);return`<li>${ingevuld(s)?`<span class="ok">✓</span>`:`<span class="leeg">!</span>`} ${esc(s.kort)}${ingevuld(s)?(zw?` <span class="sterker">— ${zw===1?"één antwoord kan":zw+" antwoorden kunnen"} nog sterker · <a data-ganaar="${i}">bekijk</a></span>`:""):` <span class="sterker">— nog niet helemaal ingevuld · <a data-ganaar="${i}">bekijk</a></span>`}</li>`}).join("")}</ul>
-      <button class="geel groot" id="dlPptx">⬇ Download mijn PowerPoint</button>
+      <div class="rij" style="align-items:center;gap:12px"><button class="geel groot" id="dlPptx">⬇ Download mijn PowerPoint</button></div>
+      <div class="mailblok">
+        <p><b>Of stuur hem meteen naar je mentor</b></p>
+        ${cfg.mentorMail?`<p class="uitleg" style="margin:0 0 10px">Naar: ${esc(cfg.mentorMail)}</p>`:tekstVeld("mentormail","E-mailadres van je mentor",0,80)}
+        <div class="rij" style="margin-top:0"><button class="sec" id="mailPptx">✉ Mail naar mijn mentor</button>${kanDelen()?`<button class="sec" id="deelPptx">↗ Delen via…</button>`:""}</div>
+        <div class="tip" id="mailUitleg" hidden style="margin:12px 0 0">📎 Er is een nieuwe mail geopend en je PowerPoint is gedownload als <b id="mailBestand"></b>. Klik in de mail op <b>Bijvoegen</b> (paperclip) en kies het bestand uit je map <b>Downloads</b>. Daarna op <b>Verzenden</b>.</div>
+      </div>
       <div class="backupblok"><p><b>Wil je later nog iets veranderen?</b> Sla dan ook een backup op. Daarmee kun je altijd verder, ook op een andere laptop.</p>
         <div class="rij"><button class="sec" data-backup="opslaan">💾 Backup opslaan</button></div></div>`;
       break;}
@@ -811,7 +818,7 @@ function tekenStap(){
     toon();document.querySelectorAll('#weergave button').forEach(b=>b.onclick=()=>{weergave=b.dataset.w;document.querySelectorAll('#weergave button').forEach(x=>x.classList.toggle('actief',x===b));toon()});
   }
   if(stap.type==="profiel"){plaats("svgProfiel",$('#plek'));renderProfiel()}
-  if(stap.type==="klaar")$('#dlPptx').onclick=maakPptx;
+  if(stap.type==="klaar"){$('#dlPptx').onclick=maakPptx;$('#mailPptx').onclick=mailMentor;if($('#deelPptx'))$('#deelPptx').onclick=deelPptx}
   document.querySelectorAll('#kaart [data-backup]').forEach(b=>b.onclick=()=>b.dataset.backup==="opslaan"?backupOpslaan():$('#backupBestand').click());
   tekenNav();
 }
@@ -849,7 +856,20 @@ async function maakPNG(svgEl,schaal=2){
   return new Promise(r=>cv.toBlob(r,'image/png'));
 }
 const blobNaarData=b=>new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result);fr.readAsDataURL(b)});
-async function plaatje(id){const el=document.getElementById(id);return{data:(await blobNaarData(await maakPNG(el))).replace(/^data:/,""),ratio:el.viewBox.baseVal.width/el.viewBox.baseVal.height}}
+async function plaatje(id){
+  const blob=await maakPNG(document.getElementById(id));
+  const img=await createImageBitmap(blob),cv=document.createElement('canvas');cv.width=img.width;cv.height=img.height;
+  const ctx=cv.getContext('2d');ctx.drawImage(img,0,0);const d=ctx.getImageData(0,0,cv.width,cv.height).data;
+  let x0=cv.width,y0=cv.height,x1=0,y1=0;
+  for(let y=0;y<cv.height;y+=2)for(let x=0;x<cv.width;x+=2){const i=(y*cv.width+x)*4;if(d[i]<245||d[i+1]<245||d[i+2]<245){if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y}}
+  if(x1<=x0||y1<=y0)return{data:(await blobNaarData(blob)).replace(/^data:/,""),ratio:img.width/img.height};
+  const pad=24;x0=Math.max(0,x0-pad);y0=Math.max(0,y0-pad);x1=Math.min(cv.width,x1+pad);y1=Math.min(cv.height,y1+pad);
+  const uit=document.createElement('canvas');uit.width=x1-x0;uit.height=y1-y0;const u=uit.getContext('2d');
+  u.fillStyle='#fff';u.fillRect(0,0,uit.width,uit.height);u.drawImage(cv,x0,y0,uit.width,uit.height,0,0,uit.width,uit.height);
+  const b2=await new Promise(r=>uit.toBlob(r,'image/png'));
+  return{data:(await blobNaarData(b2)).replace(/^data:/,""),ratio:uit.width/uit.height};
+}
+function pasIn(p,bw,bh){let w=bw,h=w/p.ratio;if(h>bh){h=bh;w=h*p.ratio}return{w,h}}
 
 /* ================= PowerPoint in huisstijl ================= */
 const HP="83276C",HG="FEC817",HF="Avenir Next",SW=13.333;
@@ -858,6 +878,9 @@ function inhoudDia(pres,titel){
   const s=pres.addSlide();s.background={color:"FFFFFF"};
   s.addText(titel,{x:0.92,y:0.38,w:11.5,h:1.38,fontFace:HF,fontSize:titelGrootte(titel),bold:true,color:HP,valign:"middle",margin:0,isTextBox:true});
   return s;
+}
+function zijTitel(s,regels,x,y,w){
+  s.addText(regels.map((r,i)=>({text:r,options:{breakLine:i<regels.length-1}})),{x,y,w,h:1.9,fontFace:HF,fontSize:48,bold:true,color:HP,valign:"top",margin:0,isTextBox:true,lineSpacingMultiple:0.95});
 }
 const ant=k=>(st.v[k]||"").toString().trim();
 function pasGrootte(alineas,w,h){
@@ -881,9 +904,18 @@ function vraagRuns(paren,{nummer=false,w=11.5,h=5.1}={}){
   return runs;
 }
 function tekstvak(s,runs,opt){s.addText(runs,Object.assign({x:0.92,y:1.95,w:11.5,h:5.1,fontFace:HF,valign:"top",margin:0,isTextBox:true,paraSpaceAfter:2},opt||{}))}
+function bestandsnaamPptx(){return("POP "+[ant("naam"),ant("klasnaam")].filter(Boolean).join(" ")).replace(/[\\/:*?"<>|]+/g,"").trim()+".pptx"}
 async function maakPptx(){
   const knop=$('#dlPptx');if(knop){knop.disabled=true;knop.textContent="Bezig met maken…"}
   try{
+    const pres=await bouwPptx();
+    await pres.writeFile({fileName:bestandsnaamPptx()});
+    toast("Je PowerPoint is gedownload. Open hem en maak hem helemaal van jou!");
+  }catch(e){console.error(e);toast("Er ging iets mis bij het maken van de PowerPoint.")}
+  finally{if(knop){knop.disabled=false;knop.textContent="⬇ Download mijn PowerPoint"}}
+}
+async function bouwPptx(){
+  {
     renderVaard();renderRoos();renderKwadrant();zorgKlas();renderProfiel();
     const pres=new PptxGenJS();pres.layout="LAYOUT_WIDE";
     const naam=ant("naam"),klas=ant("klasnaam");
@@ -907,8 +939,9 @@ async function maakPptx(){
           const s=inhoudDia(pres,stap.titel);
           tekstvak(s,vraagRuns(stap.velden.map(([k,label])=>[label,[(st.v[k]||[]).join(", "),ant(k+"_t")].filter(Boolean).join(". ")])));break;}
         case"wiel":{
-          const s=inhoudDia(pres,stap.titel),p=await plaatje("svgVaard"),h=5.75,w=h*p.ratio;
-          s.addImage({data:p.data,x:(SW-w)/2,y:1.6,w,h});break;}
+          const s=pres.addSlide();s.background={color:"FFFFFF"};zijTitel(s,["Mijn","IK-rapport"],0.6,0.55,3.6);
+          const p=await plaatje("svgVaard"),{w,h}=pasIn(p,8.3,6.95),bx=4.45;
+          s.addImage({data:p.data,x:bx+(8.3-w)/2,y:0.28+(6.95-h)/2,w,h});break;}
         case"doel":{
           const s=inhoudDia(pres,stap.titel),vr=DOELVRAGEN(stap.soort);
           tekstvak(s,vraagRuns(vr.map((q,i)=>i<3?[q,ant(stap.id+"_"+(i+1))]:[q,"",steunParen(stap.id+"_4")]),{nummer:true}));break;}
@@ -917,14 +950,18 @@ async function maakPptx(){
           const paren=stap.vragen.map(([k,q])=>[q,ant(k)]);if(stap.steun)paren.push(["Wie of wat helpt mij om dit doel te bereiken?","",steunParen(stap.steun)]);
           tekstvak(s,vraagRuns(paren,{nummer:!!stap.genummerd}));break;}
         case"vakken":{
-          const s=inhoudDia(pres,stap.titel),a=await plaatje("svgRoos"),b=await plaatje("svgKwadrant"),h=5.3;
-          const wa=h*a.ratio,wb=h*b.ratio,gap=0.5,x0=(SW-(wa+wb+gap))/2;
-          s.addImage({data:a.data,x:x0,y:1.85,w:wa,h});s.addImage({data:b.data,x:x0+wa+gap,y:1.85,w:wb,h});break;}
+          const s=pres.addSlide();s.background={color:"FFFFFF"};
+          s.addText(stap.titel,{x:0.6,y:0.3,w:12.1,h:0.85,fontFace:HF,fontSize:40,bold:true,color:HP,valign:"middle",margin:0,isTextBox:true});
+          const a=await plaatje("svgRoos"),b=await plaatje("svgKwadrant"),gap=0.35,bh=6.05;
+          let h=Math.min(bh,(12.3-gap)/(a.ratio+b.ratio));const wa=h*a.ratio,wb=h*b.ratio,x0=(SW-(wa+wb+gap))/2,y=1.25+(bh-h)/2;
+          s.addImage({data:a.data,x:x0,y,w:wa,h});s.addImage({data:b.data,x:x0+wa+gap,y,w:wb,h});break;}
         case"profiel":{
-          const s=inhoudDia(pres,stap.titel),p=await plaatje("svgProfiel");
-          let h=5.35,w=h*p.ratio;if(w>6.3){w=6.3;h=w/p.ratio}
-          s.addImage({data:p.data,x:0.92,y:1.85,w,h});
-          tekstvak(s,vraagRuns(stap.vragen.map(([k,q])=>[q,ant(k)]),{w:4.85,h:5.0}),{x:7.6,w:4.85,y:1.95,h:5.0});break;}
+          const s=pres.addSlide();s.background={color:"FFFFFF"};
+          const p=await plaatje("svgProfiel"),{w,h}=pasIn(p,7.2,6.95);
+          s.addImage({data:p.data,x:0.45,y:0.28+(6.95-h)/2,w,h});
+          const rx=0.45+w+0.45,rw=SW-rx-0.5;
+          zijTitel(s,["Welk profiel","past bij mij?"],rx,0.55,rw);
+          tekstvak(s,vraagRuns(stap.vragen.map(([k,q])=>[q,ant(k)]),{w:rw,h:4.6}),{x:rx,w:rw,y:2.45,h:4.6});break;}
         case"afsluiting":{
           const s=pres.addSlide();s.background={color:HG};
           s.addText(stap.titel,{x:0.92,y:0.38,w:11.5,h:1.38,fontFace:HF,fontSize:60,bold:true,color:"FFFFFF",valign:"middle",margin:0,isTextBox:true});
@@ -935,12 +972,47 @@ async function maakPptx(){
           tekstvak(s,runs);break;}
       }
     }
-    const bestand=("POP "+[naam,klas].filter(Boolean).join(" ")).replace(/[\\/:*?"<>|]+/g,"").trim()+".pptx";
-    await pres.writeFile({fileName:bestand});
-    toast("Je PowerPoint is gedownload. Open hem en maak hem helemaal van jou!");
-  }catch(e){console.error(e);toast("Er ging iets mis bij het maken van de PowerPoint.")}
-  finally{if(knop){knop.disabled=false;knop.textContent="⬇ Download mijn PowerPoint"}}
+    return pres;
+  }
 }
+
+/* ================= mailen naar mentor ================= */
+const PPTX_MIME="application/vnd.openxmlformats-officedocument.presentationml.presentation";
+function mentorMail(){return(cfg.mentorMail||ant("mentormail")).trim()}
+function mailUrl(){
+  const naam=ant("naam"),klas=ant("klasnaam"),to=mentorMail();
+  const onderwerp="POP-presentatie "+[naam,klas].filter(Boolean).join(" ");
+  const tekst="Beste mentor,\n\nIn de bijlage stuur ik mijn POP-presentatie.\n\nMet vriendelijke groet,\n"+(naam||"");
+  const e=encodeURIComponent;
+  switch(cfg.mailDienst||"outlook"){
+    case"gmail":return`https://mail.google.com/mail/?view=cm&fs=1&to=${e(to)}&su=${e(onderwerp)}&body=${e(tekst)}`;
+    case"mailto":return`mailto:${e(to)}?subject=${e(onderwerp)}&body=${e(tekst)}`;
+    default:return`https://outlook.office.com/mail/deeplink/compose?to=${e(to)}&subject=${e(onderwerp)}&body=${e(tekst)}`;
+  }
+}
+const geldigMail=m=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(m);
+async function mailMentor(){
+  const to=mentorMail();
+  if(!geldigMail(to)){toast("Vul eerst het e-mailadres van je mentor in.");const f=$('#f_mentormail');if(f)f.focus();return}
+  const knop=$('#mailPptx');knop.disabled=true;knop.textContent="Bezig…";
+  const url=mailUrl(),venster=(cfg.mailDienst||"outlook")==="mailto"?null:window.open("about:blank","_blank");
+  try{
+    const pres=await bouwPptx(),naam=bestandsnaamPptx();
+    await pres.writeFile({fileName:naam});
+    if(venster)venster.location.href=url;else location.href=url;
+    $('#mailUitleg').hidden=false;$('#mailBestand').textContent=naam;
+    toast("Je mail staat klaar. Voeg nu je PowerPoint toe als bijlage.");
+  }catch(e){console.error(e);if(venster)venster.close();toast("Er ging iets mis bij het maken van de PowerPoint.")}
+  finally{knop.disabled=false;knop.textContent="✉ Mail naar mijn mentor"}
+}
+async function deelPptx(){
+  try{
+    const pres=await bouwPptx(),blob=await pres.write({outputType:"blob"});
+    const file=new File([blob],bestandsnaamPptx(),{type:PPTX_MIME});
+    await navigator.share({files:[file],title:"Mijn POP-presentatie",text:"Mijn POP-presentatie"});
+  }catch(e){if(e&&e.name!=="AbortError")toast("Delen lukt niet op deze laptop. Gebruik ‘Mail naar mijn mentor’.")}
+}
+function kanDelen(){try{return!!(navigator.canShare&&navigator.canShare({files:[new File(["x"],"t.pptx",{type:PPTX_MIME})]}))}catch(e){return false}}
 
 /* ================= backup ================= */
 const BACKUP_SOORT="pop-gesprek-backup";
@@ -980,6 +1052,10 @@ function bouwMentor(){
   $('#mentorInhoud').innerHTML=`<h2>Mentor-instellingen</h2>
   <p>Pas aan wat leerlingen te zien krijgen, klik op <b>Toepassen</b> en download daarna je eigen versie om te delen.</p>
   <h3>Versie</h3><select id="m_versie"><option value="klas1" ${cfg.versie==="klas1"?"selected":""}>Klas 1</option><option value="klas2" ${cfg.versie==="klas2"?"selected":""}>Klas 2</option></select>
+  <h3>Mailen naar de mentor</h3>
+  <p>Vul je e-mailadres in, dan hoeven leerlingen dat niet zelf te doen. Leeg laten = leerling vult het zelf in.</p>
+  <input type="text" id="m_mail" value="${esc(cfg.mentorMail||"")}" placeholder="naam@school.nl">
+  <select id="m_dienst" style="margin-top:6px"><option value="outlook" ${(cfg.mailDienst||"outlook")==="outlook"?"selected":""}>Outlook (Microsoft 365, in de browser)</option><option value="gmail" ${cfg.mailDienst==="gmail"?"selected":""}>Gmail (Google Workspace)</option><option value="mailto" ${cfg.mailDienst==="mailto"?"selected":""}>Standaard mailprogramma van de laptop</option></select>
   <h3>IK-rapport (vaardighedenwiel)</h3>
   <p>Eén paar per regel: <i>kernwaarde ; tegenover liggende basisvaardigheid</i>. Gebruik | voor een nieuwe regel in het wiel.</p>
   <textarea id="m_paren">${esc(D.paren.map(p=>p[0]+" ; "+p[1]).join("\n"))}</textarea>
@@ -992,12 +1068,14 @@ function bouwMentor(){
   <div class="rij"><button class="geel" id="m_dl">⬇ Download deze versie voor leerlingen</button></div>
   <p>Dit maakt een nieuw HTML-bestand met jouw instellingen. Deel het via Magister, Teams of mail; leerlingen openen het met dubbelklik.</p>`;
   $('#m_sluit').onclick=()=>$('#mentor').classList.remove('open');
-  $('#m_versie').onchange=e=>{const v=e.target.value;const n=standaard(v);n.dalton=cfg.dalton;n.profielen=cfg.profielen;n.klassen=cfg.klassen;cfg=n;herlaadStatus();bouwMentor()};
+  $('#m_versie').onchange=e=>{const v=e.target.value;const n=standaard(v);n.dalton=cfg.dalton;n.profielen=cfg.profielen;n.klassen=cfg.klassen;n.mentorMail=cfg.mentorMail;n.mailDienst=cfg.mailDienst;cfg=n;herlaadStatus();bouwMentor()};
   $('#m_ok').onclick=()=>{
     const paren=$('#m_paren').value.split("\n").map(r=>r.split(";").map(x=>x.trim())).filter(r=>r[0]);
     const vakken=$('#m_vakken').value.split("\n").map(x=>x.trim()).filter(Boolean);
     if(paren.length<2||vakken.length<3){toast("Geef minstens twee paren en drie vakken op.");return}
     cfg.dalton.paren=paren.slice(0,6).map(p=>[p[0],p[1]||""]);cfg.vakken=vakken;
+    const mm=$('#m_mail').value.trim();if(mm&&!geldigMail(mm)){toast("Het e-mailadres klopt niet.");return}
+    cfg.mentorMail=mm;cfg.mailDienst=$('#m_dienst').value;
     if($('#m_prof')){cfg.profielen=$('#m_prof').value;cfg.klassen=$('#m_klas').value}
     tekenStap();toast("Toegepast.");
   };
