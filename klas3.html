@@ -232,10 +232,12 @@ const KLASSEN=`2 mavo/havo = Economie (mavo) + Economie & Maatschappij (havo) | 
 2 havo/vwo = Cultuur & Maatschappij | Economie & Maatschappij | Natuur & Gezondheid | Natuur & Techniek
 2 atheneum = Cultuur & Maatschappij | Economie & Maatschappij | Natuur & Gezondheid | Natuur & Techniek
 2 gymnasium = Cultuur & Maatschappij | Economie & Maatschappij | Natuur & Gezondheid | Natuur & Techniek`;
-const KLASSEN3=`3 mavo/havo = Economie (mavo) + Economie & Maatschappij (havo) | Zorg & welzijn (mavo) + Natuur & Gezondheid (havo) | Cultuur & Maatschappij (havo) | Natuur & Techniek (havo)
-3 havo/vwo = Cultuur & Maatschappij | Economie & Maatschappij | Natuur & Gezondheid | Natuur & Techniek
-3 atheneum = Cultuur & Maatschappij | Economie & Maatschappij | Natuur & Gezondheid | Natuur & Techniek
-3 gymnasium = Cultuur & Maatschappij | Economie & Maatschappij | Natuur & Gezondheid | Natuur & Techniek`;
+const KLASSEN3=`mavo = Economie (mavo) | Zorg & welzijn (mavo)
+havo = Cultuur & Maatschappij | Economie & Maatschappij | Natuur & Gezondheid | Natuur & Techniek
+vwo = Cultuur & Maatschappij | Economie & Maatschappij | Natuur & Gezondheid | Natuur & Techniek
+mavo of havo (weet ik nog niet) = Economie (mavo) + Economie & Maatschappij (havo) | Zorg & welzijn (mavo) + Natuur & Gezondheid (havo) | Cultuur & Maatschappij (havo) | Natuur & Techniek (havo)`;
+const soortVraag=()=>cfg.versie==="klas3"?"Op welk niveau ga je verder?":"Wat voor klas is het?";
+const soortKort=()=>cfg.versie==="klas3"?"Mijn niveau:":"Mijn klas:";
 const VAKKEN_K3=["Nederlands","Engels","Frans","Spaans","Duits","Wiskunde","Natuurkunde","Scheikunde","Biologie","Economie","Aardrijkskunde","Geschiedenis","Lichamelijke|opvoeding","Beeldende|vorming","DAS"];
 const PROFIELEN3=`Cultuur & Maatschappij: Geschiedenis*2, Engels, Frans, Duits, Spaans, Beeldende vorming, Aardrijkskunde
 Economie & Maatschappij: Economie*2, Wiskunde*2, Geschiedenis, Aardrijkskunde, Engels, Duits
@@ -469,7 +471,7 @@ function renderProfiel(){
   const svg=document.getElementById('svgProfiel');svg.setAttribute('viewBox',`0 0 1200 ${H3}`);
   const volNaam=r=>r.naam+(r.tag?` (${r.tag})`:"");
   let s=`<rect width="1200" height="${H3}" fill="#fff"/><text x="600" y="66" text-anchor="middle" font-family="${TFONT}" font-weight="700" font-size="54" fill="${GEEL}">Welk profiel past bij mij?</text>
-  <text x="600" y="106" text-anchor="middle" font-family="${FONT}" font-size="22" fill="${PAARS}">Klas: ${esc(st.klas)} · gemiddelde van de vakken die bij elk profiel horen</text>`;
+  <text x="600" y="106" text-anchor="middle" font-family="${FONT}" font-size="22" fill="${PAARS}">${cfg.versie==="klas3"?"Niveau":"Klas"}: ${esc(st.klas)} · gemiddelde van de vakken die bij elk profiel horen</text>`;
   if(!alle.some(r=>r.t||r.p)){s+=`<text x="600" y="200" text-anchor="middle" font-family="${FONT}" font-size="28" fill="${PAARS}">Vul eerst in de roos per vak beide scores in.</text>`}
   else{
     const bt=alle.reduce((a,b)=>b.t>a.t?b:a),bp=alle.reduce((a,b)=>b.p>a.p?b:a);
@@ -762,7 +764,7 @@ function tekenStap(){
   switch(stap.type){
     case"titel":
       h+=tekstVeld("naam","Wat is je naam?",0,40)+tekstVeld("klasnaam","In welke klas zit je?",0,20);
-      if(cfg.versie!=="klas1"){zorgKlas();h+=`<div class="veld"><label for="f_soort">Wat voor klas is het?</label><select id="f_soort">${klasOpties().map(o=>`<option ${o===st.klas?"selected":""}>${esc(o)}</option>`).join("")}</select></div>`}
+      if(cfg.versie!=="klas1"){zorgKlas();h+=`<div class="veld"><label for="f_soort">${soortVraag()}</label><select id="f_soort">${klasOpties().map(o=>`<option ${o===st.klas?"selected":""}>${esc(o)}</option>`).join("")}</select></div>`}
       h+=`<div class="backupblok"><p><b>Heb je al eerder gewerkt aan je POP?</b> Je antwoorden worden automatisch bewaard in deze browser. Werk je op een andere laptop of in een andere browser, open dan je backup.</p>
         <div class="rij"><button class="sec" data-backup="openen">📂 Backup openen</button></div></div>`;
       break;
@@ -797,7 +799,7 @@ function tekenStap(){
       <div class="visbox" id="plek"></div><p class="hint" id="hint"></p>`;break;
     case"profiel":
       zorgKlas();
-      h+=`<div class="twee"><div><div class="balk"><label for="f_soort" style="font-weight:700">Mijn klas:</label><select id="f_soort" style="padding:7px 10px;border-radius:8px;border:1.5px solid var(--rand);font:inherit">${klasOpties().map(o=>`<option ${o===st.klas?"selected":""}>${esc(o)}</option>`).join("")}</select><div class="rechts">${diagramKnoppen("svgProfiel")}</div></div><div id="plek"></div></div>
+      h+=`<div class="twee"><div><div class="balk"><label for="f_soort" style="font-weight:700">${soortKort()}</label><select id="f_soort" style="padding:7px 10px;border-radius:8px;border:1.5px solid var(--rand);font:inherit">${klasOpties().map(o=>`<option ${o===st.klas?"selected":""}>${esc(o)}</option>`).join("")}</select><div class="rechts">${diagramKnoppen("svgProfiel")}</div></div><div id="plek"></div></div>
         <div>${stap.vragen.map(([key,label])=>tekstVeld(key,label,1,140)).join("")}</div></div>`;break;
     case"afsluiting":
       h+=stap.vragen.map(([key,label])=>tekstVeld(key,label,1,160)).join("");break;
