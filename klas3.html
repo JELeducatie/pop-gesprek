@@ -232,12 +232,19 @@ const KLASSEN=`2 mavo/havo = Economie (mavo) + Economie & Maatschappij (havo) | 
 2 havo/vwo = Cultuur & Maatschappij | Economie & Maatschappij | Natuur & Gezondheid | Natuur & Techniek
 2 atheneum = Cultuur & Maatschappij | Economie & Maatschappij | Natuur & Gezondheid | Natuur & Techniek
 2 gymnasium = Cultuur & Maatschappij | Economie & Maatschappij | Natuur & Gezondheid | Natuur & Techniek`;
-const KLASSEN3=`3 mavo = Economie (mavo) | Zorg & welzijn (mavo)
-3 havo = Cultuur & Maatschappij | Economie & Maatschappij | Natuur & Gezondheid | Natuur & Techniek
+const KLASSEN3=`3 mavo/havo = Economie (mavo) + Economie & Maatschappij (havo) | Zorg & welzijn (mavo) + Natuur & Gezondheid (havo) | Cultuur & Maatschappij (havo) | Natuur & Techniek (havo)
+3 havo/vwo = Cultuur & Maatschappij | Economie & Maatschappij | Natuur & Gezondheid | Natuur & Techniek
 3 atheneum = Cultuur & Maatschappij | Economie & Maatschappij | Natuur & Gezondheid | Natuur & Techniek
 3 gymnasium = Cultuur & Maatschappij | Economie & Maatschappij | Natuur & Gezondheid | Natuur & Techniek`;
+const VAKKEN_K3=["Nederlands","Engels","Frans","Spaans","Duits","Wiskunde","Natuurkunde","Scheikunde","Biologie","Economie","Aardrijkskunde","Geschiedenis","Lichamelijke|opvoeding","Beeldende|vorming","DAS"];
+const PROFIELEN3=`Cultuur & Maatschappij: Geschiedenis*2, Engels, Frans, Duits, Spaans, Beeldende vorming, Aardrijkskunde
+Economie & Maatschappij: Economie*2, Wiskunde*2, Geschiedenis, Aardrijkskunde, Engels, Duits
+Natuur & Gezondheid: Biologie*2, Scheikunde*2, Natuurkunde, Wiskunde, Aardrijkskunde
+Natuur & Techniek: Wiskunde*2, Natuurkunde*2, Scheikunde*2, Biologie
+Economie (mavo): Economie*2, Wiskunde, Aardrijkskunde, Duits, Frans, Engels
+Zorg & welzijn (mavo): Biologie*2, Scheikunde, Wiskunde, Geschiedenis, Aardrijkskunde`;
 const leerjaar=v=>+String(v||"klas2").replace("klas","")||2;
-function standaard(versie){return{versie,dalton:JSON.parse(JSON.stringify(DALTON)),vakken:(versie==="klas1"?VAKKEN_K1:VAKKEN_K2).slice(),profielen:PROFIELEN,klassen:versie==="klas3"?KLASSEN3:KLASSEN}}
+function standaard(versie){return{versie,dalton:JSON.parse(JSON.stringify(DALTON)),vakken:(versie==="klas1"?VAKKEN_K1:versie==="klas3"?VAKKEN_K3:VAKKEN_K2).slice(),profielen:versie==="klas3"?PROFIELEN3:PROFIELEN,klassen:versie==="klas3"?KLASSEN3:KLASSEN}}
 
 const DOELVRAGEN=s=>[`Aan welke ${s} ga ik de komende periode werken?`,`Wat is mijn leerdoel voor deze ${s}?`,"Wanneer heb ik dit doel bereikt?","Wie of wat helpt mij om dit doel te bereiken?"];
 const STEUN=[["a","Wat ga ik zelf doen om dit doel te bereiken?","Zelf"],["b","Wat kan thuis doen om mij hierbij te helpen?","Thuis"],["c","Wat kan school doen om mij hierbij te helpen?","School"]];
