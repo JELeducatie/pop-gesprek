@@ -60,6 +60,24 @@ section#kaart{flex:1 1 auto;min-width:0;background:var(--card);border-radius:14p
 .doelrecap{border:1.5px solid var(--paars-l);border-radius:10px;padding:10px 14px;margin:0 0 14px;font-size:15px}.doelrecap span{display:block;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--zacht)}
 .veld p.groep{margin:10px 0 6px;font-size:13px;font-weight:700;color:var(--zacht)}.veld p.groep:first-of-type{margin-top:2px}
 .veld .max{font-weight:400;color:var(--zacht);font-size:13.5px}
+.vsblok{border:1.5px solid var(--rand);border-radius:12px;padding:12px 16px;margin:0 0 12px}
+.vsblok h3{margin:0 0 6px;font-size:16px;color:var(--paars)}
+.vsgemeen{background:#EEF7EA;border-color:#d5e8cd}.vsprof{background:#EEF5FB;border-color:#d3e3f1}.vsvrij{background:#FDF1EA;border-color:#f1dccd}
+.vsvast{margin:0 0 6px;font-size:14.5px}.vsvast::before{content:"✓ ";color:var(--paars);font-weight:700}
+.vsgroep{margin:8px 0 4px}.vslabel{margin:0 0 5px;font-size:13.5px;font-weight:700}.vslabel span{font-weight:400;color:var(--zacht)}
+.vsnoot{font-size:13px;color:var(--zacht);margin:6px 0 0}.vsuitleg{font-size:14px;margin:0 0 8px}
+.vsprofielen,.vsroutes{display:flex;flex-wrap:wrap;gap:8px}
+.vsprofielen button,.vsroutes button{background:#fff;border:1.5px solid var(--rand);color:var(--paars);border-radius:10px;padding:8px 14px;text-align:left;display:flex;flex-direction:column;gap:2px}
+.vsprofielen button span{font-weight:400;font-size:12.5px;color:var(--zacht)}
+.vsprofielen button.aan,.vsroutes button.aan{background:var(--paars);border-color:var(--paars);color:#fff}.vsprofielen button.aan span{color:#f3dcec}
+.chips button:disabled{opacity:.35;cursor:not-allowed}
+.vsstatus{background:#FFF6D6;border-radius:10px;padding:10px 14px;font-size:14px;margin:0 0 16px;color:#5a4400}.vsstatus.ok{background:#E6F4E4;color:#2E6B33;font-weight:700}
+.vsmatch{margin:4px 0 6px}.vsmatch summary{cursor:pointer;color:var(--paars);font-weight:600;font-size:14.5px}.vsmatch #plek{max-width:560px;margin-top:8px}
+#printvorm{display:none}
+@media print{body>*:not(#printvorm){display:none!important}#printvorm{display:block}body{background:#fff}
+ .pv{font-family:Arial,sans-serif;color:#000;font-size:12pt}.pv h1{font-size:15pt;margin:0 0 10px}
+ .pv table{width:100%;border-collapse:collapse;margin:0 0 12px}.pv th,.pv td{border:1px solid #000;padding:7px 9px;text-align:left;vertical-align:top}.pv th{width:30%;background:#eee}
+ .pvteken{display:flex;gap:30px;margin-top:40px}.pvteken div{flex:1;border-bottom:1px solid #000;height:70px;position:relative}.pvteken span{position:absolute;bottom:-20px;font-size:10pt}.pvlet{color:#b00}}
 .sterker{color:var(--zacht);font-size:14px}.sterker a{color:var(--paars);cursor:pointer;text-decoration:underline}
 .tip{background:#FFF6D6;border-radius:10px;padding:10px 14px;font-size:14.5px;margin:0 0 16px;color:#5a4400}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
@@ -281,7 +299,10 @@ const STAPPEN={
     {id:"klaar",type:"klaar",titel:"Klaar!",kort:"Download"}]
 };
 
-STAPPEN.klas3=STAPPEN.klas2.map(s=>s.id==="terug"?Object.assign({},s,{titel:"Terugblik op klas 2",kort:"Terugblik op klas 2"}):s);
+STAPPEN.klas3=(()=>{const k2=id=>STAPPEN.klas2.find(s=>s.id===id);
+  return[k2("titel"),k2("nu"),Object.assign({},k2("terug"),{titel:"Terugblik op klas 2",kort:"Terugblik op klas 2"}),k2("ik"),k2("vakken"),k2("toekomst"),k2("doel"),k2("aanpak"),
+    {id:"vsprofiel",type:"voorsorteer",titel:"Mijn profiel",kort:"Mijn profiel",uitleg:"Dit is het voorsorteerprofiel dat ik op dit moment wil kiezen. Vul het formulier in; de tool let op de regels."},
+    AFSLUITING,k2("klaar")]})();
 
 let cfg;
 try{cfg=JSON.parse(document.getElementById('config').textContent)}catch(e){cfg={}}
@@ -559,6 +580,8 @@ const VRAAGREGELS={
     voorbeeld:["Als ik beter plan.","Als ik vier weken lang geen huiswerk ben vergeten."]},
   o3:{min:5,nodig:["tijd","meetbaar"],starters:["Ik heb dit doel bereikt als …","Voor … wil ik …"],
     voorbeeld:["Bij de toets.","Als ik bij de volgende toets Frans een 6,5 of hoger haal."]},
+  vs_waarom:{min:6,nodig:["reden"],starters:["Ik kies op dit moment voor … omdat …","Dit profiel past bij mijn toekomst, want …"],
+    voorbeeld:["Lijkt me leuk.","Ik kies voor N&G omdat biologie mijn sterkste vak is en ik later iets in de zorg wil doen."]},
   d_wat:{min:6,nodig:["tijd","meetbaar"],starters:["Voor … wil ik …","Bij de volgende toets wil ik …"],
     voorbeeld:["Beter worden in Frans.","Voor de kerstvakantie wil ik voor de toetsen Frans minstens een 6,5 halen."]},
   d_waarom:{min:6,nodig:["reden"],starters:["Dit is belangrijk voor mij, omdat …","Voor mijn profiel/later heb ik … nodig, dus …"],
@@ -641,7 +664,7 @@ function koppelTips(){
 }
 function zwakkeVelden(stap){
   if(!KW_AAN())return[];
-  const keys=stap.type==="form"?formKeys(stap).filter(x=>!stap.items.some(i=>i[0]===x&&typeof i[2]==="string")):stap.type==="doel"?[stap.id+"_2",stap.id+"_3",...steunKeys(stap.id+"_4")]:stap.type==="velden"?stap.velden.map(v=>v[0]):(stap.vragen||[]).map(v=>v[0]).concat(stap.steun?steunKeys(stap.steun):[]);
+  const keys=stap.type==="voorsorteer"?["vs_waarom"]:stap.type==="form"?formKeys(stap).filter(x=>!stap.items.some(i=>i[0]===x&&typeof i[2]==="string")):stap.type==="doel"?[stap.id+"_2",stap.id+"_3",...steunKeys(stap.id+"_4")]:stap.type==="velden"?stap.velden.map(v=>v[0]):(stap.vragen||[]).map(v=>v[0]).concat(stap.steun?steunKeys(stap.steun):[]);
   return keys.filter(k=>(st.v[k]||"").trim()&&!beoordeel(k,st.v[k]).ok);
 }
 
@@ -693,6 +716,140 @@ function koppelHulpToekomst(){
   k.onclick=()=>{const v=$('#hulpVak');v.hidden=!v.hidden;if(!v.hidden)tekenHulpToekomst();k.classList.toggle('open',!v.hidden)};
 }
 
+/* ================= voorsorteerprofiel (klas 3) ================= */
+const VSA="Aardrijkskunde",VSE="Economie",VSF="Frans",VSD="Duits",VSS="Spaans",VSN="Natuurkunde",VSK="Scheikunde",VSB="Biologie",
+  VSG="Geschiedenis",VSWA="Wiskunde A",VSWB="Wiskunde B",VST="Tekenen",VSM="Muziek";
+const VS_TALEN=[VSF,VSD,VSS];
+const VS_GEEN_UITLEG="Je houdt dan geen ander profiel open.";
+function vsVwoHavo(vwo){
+  const CM={code:"CM",naam:"Cultuur & Maatschappij",vast:[VSG],
+    groepen:vwo?[{n:1,opties:[VSWA,VSWB]},{n:1,opties:[VSA,VSE]},{n:1,opties:[VST,VSM,...VS_TALEN]}]
+              :[{n:1,opties:VS_TALEN},{n:1,opties:[VSWA,VSWB]},{n:1,opties:[VSA,VSE]},{n:1,opties:[VST,VSM,...VS_TALEN]}],
+    vrij:[{id:"NG",label:"N&G openhouden",vast:[VSK,VSB],groepen:[{n:1,als:[VSE],label:"Je koos hierboven Economie, kies daarom nog 1",opties:[VSA,VSN]}]},
+          {id:"geen",label:"Geen ander profiel",uitleg:VS_GEEN_UITLEG,groepen:[{n:2,opties:[VSE,VSA,...VS_TALEN,VST,VSM],noot:"Economie heb je nodig als je E&M nog wilt kunnen kiezen."}]}]};
+  const EM={code:"EM",naam:"Economie & Maatschappij",vast:[VSE,VSG],groepen:[{n:1,opties:[VSWA,VSWB]},{n:1,opties:[...VS_TALEN,VSA]}],
+    vrij:[{id:"NG",label:"N&G openhouden",vast:[VSK,VSB],groepen:[{n:1,als:VS_TALEN,label:"Je koos hierboven een taal, kies daarom nog 1",opties:[VSA,VSN]}]},
+          {id:"CM",label:"C&M openhouden",vast:[],groepen:[{n:1,label:"Tekenen of muziek",opties:[VST,VSM]},{n:1,opties:[...VS_TALEN,VSA]}]},
+          {id:"geen",label:"Geen ander profiel",uitleg:VS_GEEN_UITLEG,groepen:[{n:2,opties:[VSA,...VS_TALEN,VST,VSM]}]}]};
+  const NG={code:"NG",naam:"Natuur & Gezondheid",vast:[VSK,VSB],groepen:[{n:1,opties:[VSWA,VSWB]},{n:1,opties:[VSA,VSN]}],
+    vrij:[{id:"EM",label:"E&M openhouden",vast:[VSG,VSE],groepen:[{n:1,als:[VSN],label:"Je koos hierboven Natuurkunde, kies daarom nog 1",opties:[VSA,...VS_TALEN]}]},
+          {id:"CM",label:"C&M openhouden",vast:[VSG],groepen:[{n:1,label:"Eén taal",opties:VS_TALEN},{n:1,als:[VSN],label:"Je koos hierboven Natuurkunde, kies daarom nog 1",opties:[VSA,VSE]}]},
+          {id:"geen",label:"Geen ander profiel",uitleg:VS_GEEN_UITLEG,groepen:[{n:2,opties:[VSA,VSN,VSE,...VS_TALEN,VST,VSM]}]}]};
+  const NT={code:"NT",naam:"Natuur & Techniek",vast:[VSK,VSWB,VSN,VSB],groepen:[],
+    vrij:[vwo?{id:"EM",label:"E&M openhouden",vast:[VSG,VSE,VSA],groepen:[]}
+             :{id:"EM",label:"E&M openhouden",vast:[VSG,VSE],groepen:[{n:1,label:"Plus 1",opties:[VSA,...VS_TALEN]}]},
+          {id:"CM",label:"C&M openhouden",vast:[VSG],groepen:[{n:1,label:"Eén taal",opties:VS_TALEN},{n:1,opties:[VSA,VSE]}]},
+          {id:"geen",label:"Geen ander profiel",uitleg:VS_GEEN_UITLEG,groepen:[{n:2,opties:[VSE,VSA,...VS_TALEN,VST,VSM]}]}]};
+  return[CM,EM,NG,NT];
+}
+const VS={
+  mavo:{naam:"Mavo",gemeen:["Nederlands","Engels","Lichamelijke opvoeding","DAS"],profielen:[
+    {code:"EC",naam:"Economie",vast:[VSE,"Wiskunde",VSG],groepen:[{n:1,opties:[...VS_TALEN,VSA]}],
+      vrij:[{id:"ZW",label:"Zorg en welzijn openhouden",vast:[VSK,VSB],groepen:[]},
+            {id:"geen",label:"Geen ander profiel",uitleg:"Je kunt dan later niet meer kiezen voor Zorg en welzijn.",groepen:[{n:2,opties:[VSA,VST,VSM,...VS_TALEN]}]}]},
+    {code:"ZW",naam:"Zorg en welzijn",vast:[VSB,VSK,"Wiskunde"],groepen:[{n:1,opties:[VSA,VSN]}],
+      vrij:[{id:"EC",label:"Economie openhouden",vast:[VSE],groepen:[{n:1,label:"Eén taal",opties:VS_TALEN}]},
+            {id:"geen",label:"Geen ander profiel",uitleg:"Je kunt dan later niet meer kiezen voor Economie.",groepen:[{n:2,opties:[VSA,VSN,VSG,VSE,VST,VSM,...VS_TALEN]}]}]}]},
+  havo:{naam:"Havo",gemeen:["Nederlands","Engels","Lichamelijke opvoeding","DAS"],profielen:vsVwoHavo(false)},
+  atheneum:{naam:"Atheneum",gemeen:["Nederlands","Engels","Lichamelijke opvoeding","DAS"],gemeenGroep:{n:1,label:"Kies een taal",opties:VS_TALEN},profielen:vsVwoHavo(true)},
+  gymnasium:{naam:"Gymnasium",gemeen:["Nederlands","Engels","Grieks en Latijn","Lichamelijke opvoeding","DAS"],profielen:vsVwoHavo(true)}
+};
+Object.values(VS).forEach(N=>N.profielen.forEach(P=>P.vrij.forEach(R=>{R.vast=R.vast||[];R.groepen=R.groepen||[]})));
+const vsStaat=()=>{if(!st.v.vs||typeof st.v.vs!=="object")st.v.vs={niveau:"",profiel:"",route:{},k:{}};return st.v.vs};
+function vsStandaardNiveau(){const k=(st.klas||"").toLowerCase();return k==="mavo"?"mavo":k==="havo"?"havo":k==="vwo"?"atheneum":""}
+/* alles berekenen: gekozen vakken, open groepen, wat ontbreekt */
+function vsAnalyse(){
+  const s=vsStaat(),N=VS[s.niveau];if(!N)return{klaar:false,mist:["Kies je niveau."]};
+  const P=N.profielen.find(p=>p.code===s.profiel);
+  const sel=gk=>(s.k[s.niveau+"."+gk]||[]);
+  const groepen=[],mist=[];
+  if(N.gemeenGroep)groepen.push({gk:"gem",deel:"gemeen",g:N.gemeenGroep});
+  if(!P)return{N,klaar:false,groepen,mist:["Kies een profiel."],sel};
+  P.groepen.forEach((g,i)=>groepen.push({gk:P.code+".p"+i,deel:"profiel",g}));
+  const profielVakken=[...P.vast,...P.groepen.flatMap((g,i)=>sel(P.code+".p"+i))];
+  const R=P.vrij.find(r=>r.id===(s.route[s.niveau+"."+P.code]||""));
+  if(R)R.groepen.forEach((g,i)=>{if(!g.als||g.als.some(v=>profielVakken.includes(v)))groepen.push({gk:P.code+"."+R.id+".v"+i,deel:"vrij",g})});
+  groepen.forEach(x=>{const n=sel(x.gk).length;if(n<x.g.n)mist.push(`${x.deel==="gemeen"?"Gemeenschappelijk deel":x.deel==="profiel"?"Profieldeel":"Vrij deel"}: kies nog ${x.g.n-n} vak${x.g.n-n>1?"ken":""}${x.g.label?" ("+x.g.label.charAt(0).toLowerCase()+x.g.label.slice(1)+")":""}.`)});
+  if(!R)mist.push("Vrij deel: kies welk profiel je openhoudt.");
+  const gemeen=[...N.gemeen.slice(0,2),...(N.gemeenGroep?sel("gem"):[]),...N.gemeen.slice(2)];
+  const profiel=[...P.vast,...groepen.filter(x=>x.deel==="profiel").flatMap(x=>sel(x.gk))];
+  const vrij=R?[...R.vast,...groepen.filter(x=>x.deel==="vrij").flatMap(x=>sel(x.gk))]:[];
+  return{N,P,R,groepen,sel,mist,klaar:!mist.length,gemeen,profiel,vrij};
+}
+function vsGekozenBuiten(a,gk){
+  const uit=new Set([...(a.N?a.N.gemeen:[]),...(a.P?a.P.vast:[]),...(a.R?a.R.vast:[])]);
+  a.groepen.forEach(x=>{if(x.gk!==gk)a.sel(x.gk).forEach(v=>uit.add(v))});
+  return uit;
+}
+function vsChips(a,x){
+  const gekozen=a.sel(x.gk),bezet=vsGekozenBuiten(a,x.gk);
+  const vrijSel=a.groepen.filter(y=>y.deel==="vrij").flatMap(y=>a.sel(y.gk));
+  return`<div class="vsgroep">${x.g.label||x.g.n>1?`<p class="vslabel">${esc(x.g.label||"")}${x.g.n>1?` <span>(kies ${x.g.n})</span>`:x.g.label?"":""}</p>`:`<p class="vslabel"><span>Kies 1</span></p>`}
+    <div class="chips">${x.g.opties.map(o=>{
+      const aan=gekozen.includes(o);
+      let uitReden=!aan&&bezet.has(o)?"heb je al gekozen":"";
+      if(!aan&&!uitReden&&x.deel==="vrij"&&((o===VST&&vrijSel.includes(VSM))||(o===VSM&&vrijSel.includes(VST))))uitReden="niet samen met "+(o===VST?"muziek":"tekenen");
+      return`<button type="button" data-vsgk="${esc(x.gk)}" data-vsn="${x.g.n}" data-vak="${esc(o)}" class="${aan?"aan":""}" ${uitReden?`disabled title="${esc(uitReden)}"`:""}>${esc(o)}</button>`}).join("")}</div>
+    ${x.g.noot?`<p class="vsnoot">${esc(x.g.noot)}</p>`:""}</div>`;
+}
+function vsHtml(){
+  const s=vsStaat();if(!s.niveau){s.niveau=vsStandaardNiveau()}
+  const a=vsAnalyse(),N=a.N;
+  let h=`<div class="veld"><label for="vs_niveau">Welk formulier vul je in?</label><select id="vs_niveau"><option value="">— kies —</option>${Object.entries(VS).map(([k,v])=>`<option value="${k}" ${s.niveau===k?"selected":""}>${v.naam}</option>`).join("")}</select></div>`;
+  if(!N)return h;
+  h+=`<div class="vsblok vsgemeen"><h3>Gemeenschappelijk deel</h3><p class="vsvast">${N.gemeen.map(esc).join(" · ")}</p>${N.gemeenGroep?vsChips(a,a.groepen.find(x=>x.gk==="gem")):""}</div>`;
+  h+=`<div class="vsblok"><h3>Kies jouw profiel</h3><div class="vsprofielen">${N.profielen.map(p=>`<button type="button" data-vsprofiel="${p.code}" class="${s.profiel===p.code?"aan":""}"><b>${esc(p.code.length===2&&N!==VS.mavo?p.code[0]+"&"+p.code[1]:p.naam)}</b>${N!==VS.mavo?`<span>${esc(p.naam)}</span>`:""}</button>`).join("")}</div></div>`;
+  if(!a.P)return h;
+  h+=`<div class="vsblok vsprof"><h3>Profieldeel</h3>${a.P.vast.length?`<p class="vsvast">${a.P.vast.map(esc).join(" · ")}</p>`:""}${a.groepen.filter(x=>x.deel==="profiel").map(x=>vsChips(a,x)).join("")}</div>`;
+  const rk=s.niveau+"."+a.P.code;
+  h+=`<div class="vsblok vsvrij"><h3>Vrij deel</h3><p class="vsuitleg">Welk ander profiel wil je nog openhouden?</p><div class="vsroutes">${a.P.vrij.map(r=>`<button type="button" data-vsroute="${r.id}" class="${s.route[rk]===r.id?"aan":""}">${esc(r.label)}</button>`).join("")}</div>`;
+  if(a.R){h+=`${a.R.uitleg?`<p class="vsnoot">${esc(a.R.uitleg)}</p>`:""}${a.R.vast.length?`<p class="vsvast">${a.R.vast.map(esc).join(" · ")}</p>`:""}${a.groepen.filter(x=>x.deel==="vrij").map(x=>vsChips(a,x)).join("")}`}
+  h+=`</div>`;
+  h+=a.klaar?`<div class="vsstatus ok">✓ Je formulier is compleet.</div>`:`<div class="vsstatus">${a.mist.map(esc).join("<br>")}</div>`;
+  return h;
+}
+function vsKoppel(her){
+  const s=vsStaat();
+  const sel=$('#vs_niveau');if(sel)sel.onchange=e=>{s.niveau=e.target.value;s.profiel="";
+    const k={mavo:"mavo",havo:"havo",atheneum:"vwo",gymnasium:"vwo"}[s.niveau];if(k&&klasOpties().includes(k))st.klas=k;
+    bewaar();her();if($('#vsMatch')&&$('#vsMatch').open)renderProfiel()};
+  document.querySelectorAll('[data-vsprofiel]').forEach(b=>b.onclick=()=>{s.profiel=b.dataset.vsprofiel;bewaar();her()});
+  document.querySelectorAll('[data-vsroute]').forEach(b=>b.onclick=()=>{s.route[s.niveau+"."+s.profiel]=b.dataset.vsroute;bewaar();her()});
+  document.querySelectorAll('[data-vsgk]').forEach(b=>b.onclick=()=>{
+    const key=s.niveau+"."+b.dataset.vsgk,l=s.k[key]||[],v=b.dataset.vak,n=+b.dataset.vsn;
+    if(l.includes(v))s.k[key]=l.filter(x=>x!==v);
+    else if(n===1)s.k[key]=[v];
+    else if(l.length>=n){toast(`Kies er maximaal ${n}. Klik eerst een ander uit.`);return}
+    else s.k[key]=l.concat(v);
+    bewaar();her();
+  });
+}
+/* opruimen: keuzes die door een andere keuze niet meer mogen */
+function vsOpschonen(){
+  const s=vsStaat();for(let r=0;r<3;r++){const a=vsAnalyse();if(!a.P&&!a.N)return;
+    a.groepen.forEach(x=>{const bezet=vsGekozenBuiten(a,x.gk),k=s.niveau+"."+x.gk;const l=(s.k[k]||[]).filter(v=>!bezet.has(v)&&x.g.opties.includes(v));s.k[k]=l})}
+}
+function vsSamenvatting(){
+  const a=vsAnalyse();if(!a.P)return null;
+  return{niveau:a.N.naam,profiel:a.P.naam,code:a.P.code,gemeen:a.gemeen,profielvakken:a.profiel,vrij:a.vrij,route:a.R?a.R.label:"",klaar:a.klaar};
+}
+/* afdrukbaar formulier */
+function vsAfdrukken(){
+  const z=vsSamenvatting();if(!z){toast("Kies eerst je niveau en profiel.");return}
+  const d=new Date().toLocaleDateString("nl-NL",{day:"numeric",month:"long",year:"numeric"});
+  const rij=(k,v)=>`<tr><th>${k}</th><td>${v}</td></tr>`;
+  const lijst=l=>l.length?l.map(esc).join(", "):"<i>nog niet ingevuld</i>";
+  const html=`<div class="pv">
+    <h1>VOORSORTEER PROFIELKEUZEFORMULIER ${esc(z.niveau.toUpperCase())}</h1>
+    <table>${rij("Naam",esc(ant("naam")))}${rij("Klas",esc(ant("klasnaam")))}${rij("Datum",d)}</table>
+    <table>${rij("Gemeenschappelijk deel",lijst(z.gemeen))}${rij("Profiel",`<b>${esc(z.profiel)}</b>`)}${rij("Profieldeel",lijst(z.profielvakken))}${rij("Vrij deel",(z.route?esc(z.route)+": ":"")+lijst(z.vrij))}${ant("vs_waarom")?rij("Waarom dit profiel",esc(ant("vs_waarom"))):""}</table>
+    ${z.klaar?"":`<p class="pvlet">Let op: het formulier is nog niet compleet.</p>`}
+    <div class="pvteken"><div><span>Handtekening leerling</span></div><div><span>Handtekening ouder/verzorger</span></div></div>
+  </div>`;
+  let box=$('#printvorm');if(!box){box=document.createElement('div');box.id='printvorm';document.body.appendChild(box)}
+  box.innerHTML=html;window.print();
+}
+
 
 /* ================= hulp ================= */
 const $=s=>document.querySelector(s);
@@ -736,6 +893,7 @@ function ingevuld(stap){
     case"wiel":return st.dalton.boven.every(x=>x>0)&&st.dalton.onder.every(x=>x>0);
     case"doel":return[1,2,3].every(n=>heeft(stap.id+"_"+n))&&steunKeys(stap.id+"_4").every(heeft);
     case"form":return formKeys(stap).every(heeft);
+    case"voorsorteer":return vsAnalyse().klaar&&heeft("vs_waarom");
     case"vragen":return stap.vragen.every(([k])=>heeft(k))&&(!stap.steun||steunKeys(stap.steun).every(heeft));
     case"vakken":return vakNamen().every(v=>st.talent[sleutel(v)]&&st.passie[sleutel(v)]);
     case"profiel":return stap.vragen.every(([k])=>heeft(k));
@@ -790,6 +948,11 @@ function tekenStap(){
       h+=stap.items.map(([key,label,x],i)=>typeof x==="string"?keuzeHtml(key,(i+1)+". "+label,x):tekstVeld(key,(i+1)+". "+label,1,x)).join("");
       if(stap.steun)h+=steunBlok(stap.steun,stap.items.length+1,stap.steunVraag);
       break;}
+    case"voorsorteer":
+      h+=`<div id="vsplek">${vsHtml()}</div>`+tekstVeld("vs_waarom","Waarom kies ik op dit moment voor dit profiel?",1,120)+
+        `<details class="vsmatch" id="vsMatch"><summary>📊 Bekijk welk profiel past bij jouw vakken (talent en passie)</summary><div id="plek"></div></details>
+        <div class="rij"><button class="sec" id="vsPrint">🖨 Formulier afdrukken of opslaan als PDF</button></div>`;
+      break;
     case"vragen":
       h+=stap.vragen.map(([key,label],i)=>tekstVeld(key,(stap.genummerd?(i+1)+". ":"")+label,1,stap.steun?120:140)).join("");
       if(stap.steun)h+=steunBlok(stap.steun,stap.vragen.length+1,"Wie of wat helpt mij om dit doel te bereiken?");break;
@@ -807,7 +970,7 @@ function tekenStap(){
       const open=S.filter(s=>s.type!=="klaar"&&s.type!=="afsluiting");
       h+=`<p class="uitleg">Download je presentatie. Daarna kun je hem in PowerPoint openen en een persoonlijk tintje geven, bijvoorbeeld met een foto.</p>
       <ul class="lijst">${open.map(s=>{const zw=zwakkeVelden(s).length,i=S.indexOf(s);return`<li>${ingevuld(s)?`<span class="ok">✓</span>`:`<span class="leeg">!</span>`} ${esc(s.kort)}${ingevuld(s)?(zw?` <span class="sterker">— ${zw===1?"één antwoord kan":zw+" antwoorden kunnen"} nog sterker · <a data-ganaar="${i}">bekijk</a></span>`:""):` <span class="sterker">— nog niet helemaal ingevuld · <a data-ganaar="${i}">bekijk</a></span>`}</li>`}).join("")}</ul>
-      <div class="rij" style="align-items:center;gap:12px"><button class="geel groot" id="dlPptx">⬇ Download mijn PowerPoint</button></div>
+      <div class="rij" style="align-items:center;gap:12px"><button class="geel groot" id="dlPptx">⬇ Download mijn PowerPoint</button>${cfg.versie==="klas3"?`<button class="sec" id="vsPrint2">🖨 Profielformulier afdrukken</button>`:""}</div>
       <div class="backupblok"><p><b>Wil je later nog iets veranderen?</b> Sla dan ook een backup op. Daarmee kun je altijd verder, ook op een andere laptop.</p>
         <div class="rij"><button class="sec" data-backup="opslaan">💾 Backup opslaan</button></div></div>`;
       break;}
@@ -836,7 +999,12 @@ function tekenStap(){
     toon();document.querySelectorAll('#weergave button').forEach(b=>b.onclick=()=>{weergave=b.dataset.w;document.querySelectorAll('#weergave button').forEach(x=>x.classList.toggle('actief',x===b));toon()});
   }
   if(stap.type==="profiel"){plaats("svgProfiel",$('#plek'));renderProfiel()}
-  if(stap.type==="klaar"){$('#dlPptx').onclick=maakPptx}
+  if(stap.type==="voorsorteer"){
+    const her=()=>{vsOpschonen();$('#vsplek').innerHTML=vsHtml();vsKoppel(her);tekenNav()};
+    vsOpschonen();vsKoppel(her);$('#vsPrint').onclick=vsAfdrukken;
+    $('#vsMatch').addEventListener('toggle',e=>{if(e.target.open){plaats("svgProfiel",$('#plek'));zorgKlas();renderProfiel()}});
+  }
+  if(stap.type==="klaar"){if($('#vsPrint2'))$('#vsPrint2').onclick=vsAfdrukken;$('#dlPptx').onclick=maakPptx}
   document.querySelectorAll('#kaart [data-backup]').forEach(b=>b.onclick=()=>b.dataset.backup==="opslaan"?backupOpslaan():$('#backupBestand').click());
   tekenNav();
 }
@@ -983,6 +1151,21 @@ async function bouwPptx(){
         case"doel":{
           const s=inhoudDia(pres,stap.titel),vr=DOELVRAGEN(stap.soort);
           tekstvak(s,vraagRuns(vr.map((q,i)=>i<3?[q,ant(stap.id+"_"+(i+1))]:[q,"",steunParen(stap.id+"_4")]),{nummer:true}));break;}
+        case"voorsorteer":{
+          const s=inhoudDia(pres,stap.titel),z=vsSamenvatting();
+          if(!z){tekstvak(s,[{text:"Nog geen profiel gekozen.",options:{fontSize:20,color:HP}}]);break}
+          s.addText([{text:"Voorsorteerprofiel "+z.niveau.toLowerCase()+": ",options:{color:"000000",bold:false}},{text:z.profiel,options:{color:HP,bold:true}}],{x:0.92,y:1.75,w:11.5,h:0.6,fontFace:HF,fontSize:26,margin:0,valign:"middle",isTextBox:true});
+          const kol=[["Gemeenschappelijk deel",z.gemeen,""],["Profieldeel",z.profielvakken,""],["Vrij deel",z.vrij,z.route]],cw=(11.5-0.6)/3;
+          kol.forEach(([kop,vakken,sub],i)=>{const x=0.92+i*(cw+0.3);
+            s.addShape(pres.shapes.ROUNDED_RECTANGLE,{x,y:2.6,w:cw,h:3.1,fill:{color:"F5EAF2"},line:{color:"F5EAF2"},rectRadius:0.12});
+            const runs=[{text:kop,options:{bold:true,color:HP,fontSize:18,breakLine:true}}];
+            if(sub)runs.push({text:sub,options:{italic:true,color:"6E5C69",fontSize:14,breakLine:true}});
+            runs.push({text:" ",options:{fontSize:6,breakLine:true}});
+            (vakken.length?vakken:["–"]).forEach((v,k,arr)=>runs.push({text:v,options:{color:"000000",fontSize:vakken.length>5?15:17,breakLine:k<arr.length-1}}));
+            s.addText(runs,{x:x+0.2,y:2.75,w:cw-0.4,h:2.85,fontFace:HF,valign:"top",margin:0,isTextBox:true});
+          });
+          if(ant("vs_waarom"))s.addText([{text:"Waarom: ",options:{color:"000000"}},{text:ant("vs_waarom"),options:{color:HP,bold:true}}],{x:0.92,y:5.95,w:11.5,h:0.95,fontFace:HF,fontSize:18,valign:"top",margin:0,isTextBox:true});
+          break;}
         case"form":{
           const s=inhoudDia(pres,stap.titel);
           const paren=stap.items.map(([k,q])=>[q,ant(k)]);if(stap.steun)paren.push([stap.steunVraag,"",steunParen(stap.steun)]);
