@@ -78,6 +78,7 @@ section#kaart{flex:1 1 auto;min-width:0;background:var(--card);border-radius:14p
  .pv{font-family:Arial,sans-serif;color:#000;font-size:12pt}.pv h1{font-size:15pt;margin:0 0 10px}
  .pv table{width:100%;border-collapse:collapse;margin:0 0 12px}.pv th,.pv td{border:1px solid #000;padding:7px 9px;text-align:left;vertical-align:top}.pv th{width:30%;background:#eee}
  .pvteken{display:flex;gap:30px;margin-top:40px}.pvteken div{flex:1;border-bottom:1px solid #000;height:70px;position:relative}.pvteken span{position:absolute;bottom:-20px;font-size:10pt}.pvlet{color:#b00}}
+.wielstatus{text-align:center;font-size:14px;margin:4px 0 0;color:var(--zacht)}.wielstatus b{color:var(--paars)}.wielstatus.ok{color:#2E6B33;font-weight:700}
 .sterker{color:var(--zacht);font-size:14px}.sterker a{color:var(--paars);cursor:pointer;text-decoration:underline}
 .tip{background:#FFF6D6;border-radius:10px;padding:10px 14px;font-size:14.5px;margin:0 0 16px;color:#5a4400}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
@@ -890,7 +891,7 @@ function ingevuld(stap){
     case"titel":return heeft("naam")&&heeft("klasnaam");
     case"velden":return stap.velden.every(([k])=>heeft(k));
     case"vakkeuze":return stap.velden.every(([k])=>(st.v[k]||[]).length>0);
-    case"wiel":return st.dalton.boven.every(x=>x>0)&&st.dalton.onder.every(x=>x>0);
+    case"wiel":{const w=wielStatus();return w.nu===w.tot&&w.lat===w.tot}
     case"doel":return[1,2,3].every(n=>heeft(stap.id+"_"+n))&&steunKeys(stap.id+"_4").every(heeft);
     case"form":return formKeys(stap).every(heeft);
     case"voorsorteer":return vsAnalyse().klaar&&heeft("vs_waarom");
@@ -910,7 +911,12 @@ function tekenNav(){
   const tel=S.filter(s=>s.type!=="klaar"&&s.type!=="afsluiting"),k=tel.filter(ingevuld).length;
   $('#voortgang').style.width=Math.round(k/tel.length*100)+"%";
 }
-function gaNaar(i){st.stap=Math.max(0,Math.min(stappen().length-1,i));bewaar();tekenStap();window.scrollTo({top:0,behavior:"smooth"})}
+function wielStatus(){syncDalton();const d=st.dalton,nu=[...d.boven,...d.onder],dl=[...d.dBoven,...d.dOnder];return{nu:nu.filter(x=>x>0).length,lat:dl.filter(x=>x>0).length,tot:nu.length}}
+function wielMelding(w){return w.nu<w.tot?`Kleur eerst alle onderdelen in (${w.nu} van de ${w.tot}).`:`Leg nog bij ${w.tot-w.lat} ${w.tot-w.lat===1?"onderdeel":"onderdelen"} je lat: waar wil je naartoe groeien?`}
+function gaNaar(i){
+  const cur=stappen()[st.stap];
+  if(cur&&cur.type==="wiel"&&i>st.stap&&!ingevuld(cur)){const w=wielStatus();toast(wielMelding(w));if(w.nu===w.tot&&modus!=="doel"){modus="doel";tekenStap()}return}
+  st.stap=Math.max(0,Math.min(stappen().length-1,i));bewaar();tekenStap();window.scrollTo({top:0,behavior:"smooth"})}
 
 /* ================= stappen tekenen ================= */
 function tekenStap(){
@@ -934,7 +940,7 @@ function tekenStap(){
     case"wiel":
       h+=`<p class="uitleg">Kleur eerst in waar je nu staat. Zet daarna per onderdeel een dikke lijn op de plek waar je naartoe wilt groeien.</p>
       <div class="balk"><div class="seg" id="modus"><button data-m="nu" class="${modus==="nu"?"actief":""}">1 · Waar sta ik nu?</button><button data-m="doel" class="${modus==="doel"?"actief":""}">2 · Waar wil ik naartoe?</button></div><div class="rechts">${diagramKnoppen("svgVaard")}</div></div>
-      <div class="visbox" id="plek"></div><p class="hint" id="hint"></p>`;break;
+      <p class="wielstatus" id="wielStatus"></p><div class="visbox" id="plek"></div><p class="hint" id="hint"></p>`;break;
     case"doel":{
       const lijst=stap.kant==="boven"?kernLijst():basisLijst(),vr=DOELVRAGEN(stap.soort),tip=doelTip(stap.kant);
       h+=(tip?`<div class="tip">💡 ${esc(tip)}</div>`:"")+
@@ -990,7 +996,7 @@ function tekenStap(){
   }));
   if(stap.type==="wiel"){
     plaats("svgVaard",$('#plek'));const hint=()=>{$('#hint').textContent=modus==="nu"?"Klik in elke taartpunt op het ringetje dat bij jouw score past. Nog eens klikken op je hoogste ring = één lager.":"Klik per taartpunt op de ring waar je naartoe wilt groeien. Daar komt een dikke lijn. Nog eens klikken haalt hem weg."};
-    renderVaard();hint();
+    renderVaard();hint();werkWielStatus();
     document.querySelectorAll('#modus button').forEach(b=>b.onclick=()=>{modus=b.dataset.m;document.querySelectorAll('#modus button').forEach(x=>x.classList.toggle('actief',x===b));hint()});
   }
   if(stap.type==="vakken"){
@@ -1038,12 +1044,27 @@ function doelTip(kant){
 }
 
 /* klikken in diagrammen */
+function werkWielStatus(){const el=$('#wielStatus');if(!el)return;const w=wielStatus(),klaar=w.nu===w.tot&&w.lat===w.tot;
+  el.className="wielstatus"+(klaar?" ok":"");el.innerHTML=klaar?"✓ Klaar: alles ingekleurd en bij elk onderdeel je lat gelegd.":`Ingekleurd: <b>${w.nu}/${w.tot}</b> · Lat gelegd: <b>${w.lat}/${w.tot}</b>`}
 document.getElementById('svgVaard').addEventListener('click',e=>{
   const c=e.target.closest('.cel');if(!c)return;
   const z=c.dataset.z,j=+c.dataset.j,k=+c.dataset.k;
-  if(modus==="nu"){st.dalton[z][j]=st.dalton[z][j]===k+1?k:k+1}
-  else{const dz=z==="boven"?"dBoven":"dOnder";st.dalton[dz][j]=st.dalton[dz][j]===k+1?0:k+1}
-  bewaar();renderVaard();tekenNav();
+  const dz=z==="boven"?"dBoven":"dOnder",max=cfg.dalton.max;
+  if(modus==="nu"){
+    const nieuw=st.dalton[z][j]===k+1?k:k+1;st.dalton[z][j]=nieuw;
+    if(st.dalton[dz][j]&&st.dalton[dz][j]<=nieuw&&nieuw<max)st.dalton[dz][j]=0;
+  }else{
+    const nu=st.dalton[z][j];
+    if(!nu){toast("Kleur dit onderdeel eerst in: waar sta je nu?");return}
+    if(k+1<=nu&&!(nu===max&&k+1===max)){toast("Leg je lat hoger dan waar je nu staat.");return}
+    st.dalton[dz][j]=st.dalton[dz][j]===k+1?0:k+1;
+  }
+  bewaar();renderVaard();tekenNav();werkWielStatus();
+  const w=wielStatus();
+  if(modus==="nu"&&w.nu===w.tot&&w.lat<w.tot&&!werkWielStatus.gemeld){werkWielStatus.gemeld=1;modus="doel";
+    document.querySelectorAll('#modus button').forEach(x=>x.classList.toggle('actief',x.dataset.m==="doel"));
+    $('#hint').textContent="Klik per taartpunt op de ring waar je naartoe wilt groeien. Daar komt een dikke lijn. Nog eens klikken haalt hem weg.";
+    toast("Mooi! Leg nu per onderdeel je lat: waar wil je naartoe groeien?")}
 });
 document.getElementById('svgRoos').addEventListener('click',e=>{
   const c=e.target.closest('.cel');if(!c)return;
