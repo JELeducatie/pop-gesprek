@@ -253,11 +253,13 @@ const KLASSEN=`2 mavo/havo = Economie (mavo) + Economie & Maatschappij (havo) | 
 2 gymnasium = Cultuur & Maatschappij | Economie & Maatschappij | Natuur & Gezondheid | Natuur & Techniek`;
 const KLASSEN3=`mavo = Economie (mavo) | Zorg & welzijn (mavo)
 havo = Cultuur & Maatschappij | Economie & Maatschappij | Natuur & Gezondheid | Natuur & Techniek
-vwo = Cultuur & Maatschappij | Economie & Maatschappij | Natuur & Gezondheid | Natuur & Techniek
-mavo of havo (weet ik nog niet) = Economie (mavo) + Economie & Maatschappij (havo) | Zorg & welzijn (mavo) + Natuur & Gezondheid (havo) | Cultuur & Maatschappij (havo) | Natuur & Techniek (havo)`;
+atheneum = Cultuur & Maatschappij | Economie & Maatschappij | Natuur & Gezondheid | Natuur & Techniek
+gymnasium = Cultuur & Maatschappij | Economie & Maatschappij | Natuur & Gezondheid | Natuur & Techniek
+mavo of havo (weet ik nog niet) = Economie (mavo) + Economie & Maatschappij (havo) | Zorg & welzijn (mavo) + Natuur & Gezondheid (havo) | Cultuur & Maatschappij (havo) | Natuur & Techniek (havo)
+havo of vwo (weet ik nog niet) = Cultuur & Maatschappij | Economie & Maatschappij | Natuur & Gezondheid | Natuur & Techniek`;
 const soortVraag=()=>cfg.versie==="klas3"?"Op welk niveau ga je verder?":"Wat voor klas is het?";
 const soortKort=()=>cfg.versie==="klas3"?"Mijn niveau:":"Mijn klas:";
-const VAKKEN_K3=["Nederlands","Engels","Frans","Spaans","Duits","Wiskunde","Natuurkunde","Scheikunde","Biologie","Economie","Aardrijkskunde","Geschiedenis","Lichamelijke|opvoeding","Beeldende|vorming","DAS"];
+const VAKKEN_K3=["Nederlands","Engels","Frans","Spaans","Duits","Wiskunde","Natuurkunde","Scheikunde","Biologie","Economie","Aardrijkskunde","Geschiedenis","Lichamelijke|opvoeding","Beeldende|vorming"];
 const PROFIELEN3=`Cultuur & Maatschappij: Geschiedenis*2, Engels, Frans, Duits, Spaans, Beeldende vorming, Aardrijkskunde
 Economie & Maatschappij: Economie*2, Wiskunde*2, Geschiedenis, Aardrijkskunde, Engels, Duits
 Natuur & Gezondheid: Biologie*2, Scheikunde*2, Natuurkunde, Wiskunde, Aardrijkskunde
@@ -757,7 +759,7 @@ const VS={
 };
 Object.values(VS).forEach(N=>N.profielen.forEach(P=>P.vrij.forEach(R=>{R.vast=R.vast||[];R.groepen=R.groepen||[]})));
 const vsStaat=()=>{if(!st.v.vs||typeof st.v.vs!=="object")st.v.vs={niveau:"",profiel:"",route:{},k:{}};return st.v.vs};
-function vsStandaardNiveau(){const k=(st.klas||"").toLowerCase();return k==="mavo"?"mavo":k==="havo"?"havo":k==="vwo"?"atheneum":""}
+function vsStandaardNiveau(){const k=(st.klas||"").toLowerCase();return VS[k]?k:""}
 /* alles berekenen: gekozen vakken, open groepen, wat ontbreekt */
 function vsAnalyse(){
   const s=vsStaat(),N=VS[s.niveau];if(!N)return{klaar:false,mist:["Kies je niveau."]};
@@ -812,7 +814,7 @@ function vsHtml(){
 function vsKoppel(her){
   const s=vsStaat();
   const sel=$('#vs_niveau');if(sel)sel.onchange=e=>{s.niveau=e.target.value;s.profiel="";
-    const k={mavo:"mavo",havo:"havo",atheneum:"vwo",gymnasium:"vwo"}[s.niveau];if(k&&klasOpties().includes(k))st.klas=k;
+    const k=s.niveau;if(k&&klasOpties().includes(k))st.klas=k;
     bewaar();her();if($('#vsMatch')&&$('#vsMatch').open)renderProfiel()};
   document.querySelectorAll('[data-vsprofiel]').forEach(b=>b.onclick=()=>{s.profiel=b.dataset.vsprofiel;bewaar();her()});
   document.querySelectorAll('[data-vsroute]').forEach(b=>b.onclick=()=>{s.route[s.niveau+"."+s.profiel]=b.dataset.vsroute;bewaar();her()});
