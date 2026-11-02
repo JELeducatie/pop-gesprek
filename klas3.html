@@ -266,8 +266,15 @@ Natuur & Gezondheid: Biologie*2, Scheikunde*2, Natuurkunde, Wiskunde, Aardrijksk
 Natuur & Techniek: Wiskunde*2, Natuurkunde*2, Scheikunde*2, Biologie
 Economie (mavo): Economie*2, Wiskunde, Aardrijkskunde, Duits, Frans, Engels
 Zorg & welzijn (mavo): Biologie*2, Scheikunde, Wiskunde, Geschiedenis, Aardrijkskunde`;
-const leerjaar=v=>+String(v||"klas2").replace("klas","")||2;
-function standaard(versie){return{versie,dalton:JSON.parse(JSON.stringify(DALTON)),vakken:(versie==="klas1"?VAKKEN_K1:versie==="klas3"?VAKKEN_K3:VAKKEN_K2).slice(),profielen:versie==="klas3"?PROFIELEN3:PROFIELEN,klassen:versie==="klas3"?KLASSEN3:KLASSEN}}
+const leerjaar=v=>parseInt(String(v||"klas2").replace("klas",""))||2;
+const BASIS_1B=[["Zelfstandigheid","Ik kan zelfstandig aan|mijn taken werken en|weet wanneer ik|hulp nodig heb"],
+  ["Verantwoordelijkheid","Ik kies de juiste|werkplek en laat daar|het gedrag zien dat|erbij past"],
+  ["Samenwerken","Ik werk goed samen en|help anderen zonder|hun werk over te nemen"],
+  ["Reflectie","Ik controleer mijn|werk en weet wat ik|kan verbeteren"],
+  ["Effectiviteit","Ik plan mijn werk zo|dat mijn weektaak|op vrijdag af is"]];
+const VERSIE_LABEL={klas1b:"Startlab"};
+const versieNaam=v=>VERSIE_LABEL[v]||"Klas "+leerjaar(v);
+function standaard(versie){return{versie,dalton:versie==="klas1b"?Object.assign(JSON.parse(JSON.stringify(DALTON)),{paren:JSON.parse(JSON.stringify(BASIS_1B))}):JSON.parse(JSON.stringify(DALTON)),vakken:(versie==="klas1"||versie==="klas1b"?VAKKEN_K1:versie==="klas3"?VAKKEN_K3:VAKKEN_K2).slice(),profielen:versie==="klas3"?PROFIELEN3:PROFIELEN,klassen:versie==="klas3"?KLASSEN3:KLASSEN}}
 
 const DOELVRAGEN=s=>[`Aan welke ${s} ga ik de komende periode werken?`,`Wat is mijn leerdoel voor deze ${s}?`,"Wanneer heb ik dit doel bereikt?","Wie of wat helpt mij om dit doel te bereiken?"];
 const STEUN=[["a","Wat ga ik zelf doen om dit doel te bereiken?","Zelf"],["b","Wat kan thuis doen om mij hierbij te helpen?","Thuis"],["c","Wat kan school doen om mij hierbij te helpen?","School"]];
@@ -302,6 +309,7 @@ const STAPPEN={
     {id:"klaar",type:"klaar",titel:"Klaar!",kort:"Download"}]
 };
 
+STAPPEN.klas1b=STAPPEN.klas1;
 STAPPEN.klas3=(()=>{const k2=id=>STAPPEN.klas2.find(s=>s.id===id);
   return[k2("titel"),k2("nu"),Object.assign({},k2("terug"),{titel:"Terugblik op klas 2",kort:"Terugblik op klas 2"}),k2("ik"),k2("vakken"),k2("toekomst"),k2("doel"),k2("aanpak"),
     {id:"vsprofiel",type:"voorsorteer",titel:"Mijn profiel",kort:"Mijn profiel",uitleg:"Dit is het voorsorteerprofiel dat ik op dit moment wil kiezen. Vul het formulier in; de tool let op de regels."},
@@ -309,7 +317,7 @@ STAPPEN.klas3=(()=>{const k2=id=>STAPPEN.klas2.find(s=>s.id===id);
 
 let cfg;
 try{cfg=JSON.parse(document.getElementById('config').textContent)}catch(e){cfg={}}
-if(!cfg.dalton) cfg=standaard(["klas1","klas2","klas3"].includes(cfg.versie)?cfg.versie:"klas2");
+if(!cfg.dalton) cfg=standaard(["klas1","klas1b","klas2","klas3"].includes(cfg.versie)?cfg.versie:"klas2");
 
 /* ================= status ================= */
 const opslag=()=>"popgesprek-wizard-"+cfg.versie;
@@ -930,7 +938,7 @@ function tekenStap(){
   switch(stap.type){
     case"titel":
       h+=tekstVeld("naam","Wat is je naam?",0,40)+tekstVeld("klasnaam","In welke klas zit je?",0,20);
-      if(cfg.versie!=="klas1"){zorgKlas();h+=`<div class="veld"><label for="f_soort">${soortVraag()}</label><select id="f_soort">${klasOpties().map(o=>`<option ${o===st.klas?"selected":""}>${esc(o)}</option>`).join("")}</select></div>`}
+      if(leerjaar(cfg.versie)>1){zorgKlas();h+=`<div class="veld"><label for="f_soort">${soortVraag()}</label><select id="f_soort">${klasOpties().map(o=>`<option ${o===st.klas?"selected":""}>${esc(o)}</option>`).join("")}</select></div>`}
       h+=`<div class="backupblok"><p><b>Heb je al eerder gewerkt aan je POP?</b> Je antwoorden worden automatisch bewaard in deze browser. Werk je op een andere laptop of in een andere browser, open dan je backup.</p>
         <div class="rij"><button class="sec" data-backup="openen">📂 Backup openen</button></div></div>`;
       break;
@@ -1240,7 +1248,7 @@ async function backupInlezen(bestand){
   let data;
   try{data=JSON.parse(await bestand.text())}catch(e){toast("Dit bestand is geen POP-backup.");return}
   if(!data||data.soort!==BACKUP_SOORT||!data.antwoorden||!data.antwoorden.dalton){toast("Dit bestand is geen POP-backup.");return}
-  if(data.versie!==cfg.versie){toast(`Deze backup hoort bij klas ${leerjaar(data.versie)}. Open de juiste versie en probeer het daar.`);return}
+  if(data.versie!==cfg.versie){toast(`Deze backup hoort bij ${versieNaam(data.versie)}. Open de juiste versie en probeer het daar.`);return}
   if(heeftAntwoorden()&&!confirm("Je huidige antwoorden in deze browser worden vervangen door de backup. Doorgaan?"))return;
   const a=data.antwoorden;
   st={dalton:{boven:[],onder:[],dBoven:[],dOnder:[]},talent:{},passie:{},klas:"",v:{},stap:0};
@@ -1257,7 +1265,7 @@ window.addEventListener('dragover',e=>e.preventDefault());
 window.addEventListener('drop',e=>{const f=e.dataTransfer&&e.dataTransfer.files[0];if(f&&/\.(pop|json)$/i.test(f.name)){e.preventDefault();backupInlezen(f)}});
 
 
-$('#versieLabel').textContent="Klas "+leerjaar(cfg.versie);document.title="Mijn POP-gesprek – klas "+leerjaar(cfg.versie);
+$('#versieLabel').textContent=versieNaam(cfg.versie);document.title="Mijn POP-gesprek – "+versieNaam(cfg.versie);
 migreerSteun();bewaar();
 tekenStap();
 </script>
