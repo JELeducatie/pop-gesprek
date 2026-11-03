@@ -279,7 +279,7 @@ function standaard(versie){return{versie,dalton:versie==="klas1b"?Object.assign(
 const DOELVRAGEN=s=>[`Aan welke ${s} ga ik de komende periode werken?`,`Wat is mijn leerdoel voor deze ${s}?`,"Wanneer heb ik dit doel bereikt?","Wie of wat helpt mij om dit doel te bereiken?"];
 const STEUN=[["a","Wat ga ik zelf doen om dit doel te bereiken?","Zelf"],["b","Wat kan thuis doen om mij hierbij te helpen?","Thuis"],["c","Wat kan school doen om mij hierbij te helpen?","School"]];
 const steunKeys=p=>STEUN.map(([s])=>p+s);
-function steunBlok(p,nr,vraag){return`<fieldset class="steun"><legend>${nr}. ${esc(vraag)}</legend>${STEUN.map(([s,l])=>tekstVeld(p+s,l,1,80)).join("")}</fieldset>`}
+function steunBlok(p,nr,vraag){return`<fieldset class="steun"><legend>${nr}. ${esc(vraag)}</legend>${STEUN.map(([s,l])=>tekstVeld(p+s,l,1,120)).join("")}</fieldset>`}
 function migreerSteun(){["kern_4","basis_4","o4"].forEach(k=>{if(st.v[k]&&!st.v[k+"a"]){st.v[k+"a"]=st.v[k]}delete st.v[k]})}
 const AFSLUITING={id:"afsluiting",type:"afsluiting",titel:"Afsluiting",kort:"Afsluiting",uitleg:"Dit vul je tijdens of na het gesprek samen met je mentor in. Je mag het nu leeg laten.",
   vragen:[["afspraken","Welke afspraken hebben wij tijdens dit gesprek gemaakt?"],["totslot","En tot slot wil ik nog zeggen......"]]};
