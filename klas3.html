@@ -923,7 +923,7 @@ function tekenNav(){
   $('#voortgang').style.width=Math.round(k/tel.length*100)+"%";
 }
 function wielStatus(){syncDalton();const d=st.dalton,nu=[...d.boven,...d.onder],dl=[...d.dBoven,...d.dOnder];return{nu:nu.filter(x=>x>0).length,lat:dl.filter(x=>x>0).length,tot:nu.length}}
-function wielMelding(w){return w.nu<w.tot?`Kleur eerst alle onderdelen in (${w.nu} van de ${w.tot}).`:`Leg nog bij ${w.tot-w.lat} ${w.tot-w.lat===1?"onderdeel":"onderdelen"} je lat.`}
+function wielMelding(w){return w.nu<w.tot?`Kleur eerst alle onderdelen in (${w.nu} van de ${w.tot}).`:`Zet nog bij ${w.tot-w.lat} ${w.tot-w.lat===1?"onderdeel":"onderdelen"} je doel.`}
 function gaNaar(i){
   const cur=stappen()[st.stap];
   if(cur&&cur.type==="wiel"&&i>st.stap&&!ingevuld(cur)){const w=wielStatus();toast(wielMelding(w));if(w.nu===w.tot&&modus!=="doel"){modus="doel";tekenStap()}return}
@@ -950,8 +950,8 @@ function tekenStap(){
       h+=stap.velden.map(([key,label])=>`<div class="veld"><label>${esc(label)}</label><div class="chips" data-chips="${key}">${vakNamen().map(v=>{const n=kaal(v),aan=(st.v[key]||[]).includes(n);return`<button data-vak="${esc(n)}" class="${aan?"aan":""}">${esc(n)}</button>`}).join("")}</div></div>
         ${tekstVeld(key+"_t","Toelichting (mag je leeg laten)",1,100)}`).join("");break;
     case"wiel":
-      h+=`<p class="uitleg">Kleur eerst in waar je nu staat. Leg daarna per onderdeel je lat met een dikke lijn. Die mag hoger, gelijk of lager liggen dan waar je nu staat.</p>
-      <div class="balk"><div class="seg" id="modus"><button data-m="nu" class="${modus==="nu"?"actief":""}">1 · Waar sta ik nu?</button><button data-m="doel" class="${modus==="doel"?"actief":""}">2 · Waar leg ik de lat?</button></div><div class="rechts">${diagramKnoppen("svgVaard")}</div></div>
+      h+=`<p class="uitleg">Kleur eerst in waar je nu staat. Zet daarna per onderdeel je doel met een dikke lijn. Dat mag hoger, gelijk of lager liggen dan waar je nu staat.</p>
+      <div class="balk"><div class="seg" id="modus"><button data-m="nu" class="${modus==="nu"?"actief":""}">1 · Waar sta ik nu?</button><button data-m="doel" class="${modus==="doel"?"actief":""}">2 · Wat is mijn doel?</button></div><div class="rechts">${diagramKnoppen("svgVaard")}</div></div>
       <p class="wielstatus" id="wielStatus"></p><div class="visbox" id="plek"></div><p class="hint" id="hint"></p>`;break;
     case"doel":{
       const lijst=stap.kant==="boven"?kernLijst():basisLijst(),vr=DOELVRAGEN(stap.soort),tip=doelTip(stap.kant);
@@ -1007,7 +1007,7 @@ function tekenStap(){
     st.v[key]=l.includes(n)?l.filter(x=>x!==n):l.concat(n);bewaar();b.classList.toggle('aan');tekenNav();
   }));
   if(stap.type==="wiel"){
-    plaats("svgVaard",$('#plek'));const hint=()=>{$('#hint').textContent=modus==="nu"?"Klik in elke taartpunt op het ringetje dat bij jouw score past. Nog eens klikken op je hoogste ring = één lager.":"Klik per taartpunt op de ring waar jij je lat legt. Daar komt een dikke lijn. Nog eens klikken haalt hem weg."};
+    plaats("svgVaard",$('#plek'));const hint=()=>{$('#hint').textContent=modus==="nu"?"Klik in elke taartpunt op het ringetje dat bij jouw score past. Nog eens klikken op je hoogste ring = één lager.":"Klik per taartpunt op de ring waar jouw doel ligt. Daar komt een dikke lijn. Nog eens klikken haalt hem weg."};
     renderVaard();hint();werkWielStatus();
     document.querySelectorAll('#modus button').forEach(b=>b.onclick=()=>{modus=b.dataset.m;document.querySelectorAll('#modus button').forEach(x=>x.classList.toggle('actief',x===b));hint()});
   }
@@ -1057,7 +1057,7 @@ function doelTip(kant){
 
 /* klikken in diagrammen */
 function werkWielStatus(){const el=$('#wielStatus');if(!el)return;const w=wielStatus(),klaar=w.nu===w.tot&&w.lat===w.tot;
-  el.className="wielstatus"+(klaar?" ok":"");el.innerHTML=klaar?"✓ Klaar: alles ingekleurd en bij elk onderdeel je lat gelegd.":`Ingekleurd: <b>${w.nu}/${w.tot}</b> · Lat gelegd: <b>${w.lat}/${w.tot}</b>`}
+  el.className="wielstatus"+(klaar?" ok":"");el.innerHTML=klaar?"✓ Klaar: alles ingekleurd en bij elk onderdeel je doel gezet.":`Ingekleurd: <b>${w.nu}/${w.tot}</b> · Doel gezet: <b>${w.lat}/${w.tot}</b>`}
 document.getElementById('svgVaard').addEventListener('click',e=>{
   const c=e.target.closest('.cel');if(!c)return;
   const z=c.dataset.z,j=+c.dataset.j,k=+c.dataset.k;
@@ -1073,8 +1073,8 @@ document.getElementById('svgVaard').addEventListener('click',e=>{
   const w=wielStatus();
   if(modus==="nu"&&w.nu===w.tot&&w.lat<w.tot&&!werkWielStatus.gemeld){werkWielStatus.gemeld=1;modus="doel";
     document.querySelectorAll('#modus button').forEach(x=>x.classList.toggle('actief',x.dataset.m==="doel"));
-    $('#hint').textContent="Klik per taartpunt op de ring waar jij je lat legt. Daar komt een dikke lijn. Nog eens klikken haalt hem weg.";
-    toast("Mooi! Leg nu per onderdeel je lat: waar wil jij komen?")}
+    $('#hint').textContent="Klik per taartpunt op de ring waar jouw doel ligt. Daar komt een dikke lijn. Nog eens klikken haalt hem weg.";
+    toast("Mooi! Zet nu per onderdeel je doel: waar wil jij komen?")}
 });
 document.getElementById('svgRoos').addEventListener('click',e=>{
   const c=e.target.closest('.cel');if(!c)return;
