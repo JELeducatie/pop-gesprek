@@ -79,6 +79,7 @@ section#kaart{flex:1 1 auto;min-width:0;background:var(--card);border-radius:14p
  .pv table{width:100%;border-collapse:collapse;margin:0 0 12px}.pv th,.pv td{border:1px solid #000;padding:7px 9px;text-align:left;vertical-align:top}.pv th{width:30%;background:#eee}
  .pvteken{display:flex;gap:30px;margin-top:40px}.pvteken div{flex:1;border-bottom:1px solid #000;height:70px;position:relative}.pvteken span{position:absolute;bottom:-20px;font-size:10pt}.pvlet{color:#b00}}
 .wielstatus{text-align:center;font-size:14px;margin:4px 0 0;color:var(--zacht)}.wielstatus b{color:var(--paars)}.wielstatus.ok{color:#2E6B33;font-weight:700}
+.slogan{float:right;width:170px;margin:0 0 10px 20px}@media (max-width:860px){.slogan{width:120px}}
 .sterker{color:var(--zacht);font-size:14px}.sterker a{color:var(--paars);cursor:pointer;text-decoration:underline}
 .tip{background:#FFF6D6;border-radius:10px;padding:10px 14px;font-size:14.5px;margin:0 0 16px;color:#5a4400}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
@@ -934,6 +935,7 @@ function tekenStap(){
   const S=stappen();if(st.stap>=S.length)st.stap=0;
   const stap=S[st.stap],k=$('#kaart');
   let h=`<h2>${esc(stap.titel)}</h2>${stap.uitleg?`<p class="uitleg">${esc(stap.uitleg)}</p>`:""}`;
+  if(stap.type==="klaar")h=`<img class="slogan" src="data:image/png;base64,${HUISSTIJL.sloganPaars.d}" alt="Het begint hier">`+h;
   if(stap.id==="toekomst"&&KW_AAN())h+=`<p class="uitleg">Weet je het nog niet precies? Dat is niet erg. Schrijf op wat je al wél weet.</p>`+hulpToekomstHtml();
   switch(stap.type){
     case"titel":

@@ -7,7 +7,7 @@
 <style>
 :root{--paars:#83276C;--paars-l:#F5EAF2;--geel:#FEC817}
 *{box-sizing:border-box}
-body{margin:0;min-height:100vh;font-family:"Avenir Next","Segoe UI",system-ui,Arial,sans-serif;background:var(--geel);color:var(--paars);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px}
+body{margin:0;min-height:100vh;position:relative;overflow-x:hidden;font-family:"Avenir Next","Segoe UI",system-ui,Arial,sans-serif;background:var(--geel);color:var(--paars);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px}
 h1{color:#fff;font-size:clamp(36px,7vw,64px);margin:0 0 8px;font-weight:800;text-align:center}
 p.sub{margin:0 0 36px;font-size:19px;text-align:center}
 .keuze{display:flex;gap:20px;flex-wrap:wrap;justify-content:center}
@@ -16,9 +16,14 @@ a.kaart:hover{transform:translateY(-3px)}
 a.kaart b{display:block;font-size:30px;font-weight:800;margin-bottom:6px}
 a.kaart span{font-size:15px;color:#5b4a56}
 footer{margin-top:40px;font-size:13px;text-align:center;max-width:520px}
+.ster{position:fixed;right:-150px;top:-170px;width:520px;max-width:70vw;pointer-events:none;z-index:0}
+h1,p.sub,.keuze,footer{position:relative;z-index:1}
+.logo{position:fixed;right:24px;bottom:20px;width:190px;z-index:1}
+@media (max-width:700px){.ster{display:none}.logo{position:static;margin-top:24px;width:170px}}
 </style>
 </head>
 <body>
+<img class="ster" src="beeld/ster.svg" alt="">
 <h1>POP-gesprek</h1>
 <p class="sub">Kies je leerjaar en maak stap voor stap je POP-presentatie.</p>
 <div class="keuze">
@@ -28,5 +33,6 @@ footer{margin-top:40px;font-size:13px;text-align:center;max-width:520px}
   <a class="kaart" href="klas3.html"><b>Klas 3</b><span>Vakken, profielen, je toekomst en je doel</span></a>
 </div>
 <footer>Je antwoorden blijven op je eigen laptop en worden nergens anders opgeslagen.</footer>
+<img class="logo" src="beeld/logo-paars.png" alt="Jan van Egmond Lyceum">
 </body>
 </html>
