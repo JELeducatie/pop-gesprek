@@ -402,7 +402,7 @@ function renderVaard(){
   const tfB=Math.min(56,(R+125)*2.1/(D.titelBoven.length*0.62)),tfO=Math.min(56,(R+125)*2.0/(D.titelOnder.length*0.62));
   const titels=boogTekst(defs,90,125,R+125,true,D.titelBoven,tfB,GEEL,TFONT,700)+boogTekst(defs,-90,120,R+140+tfO*0.8,false,D.titelOnder,tfO,GEEL,TFONT,700);
   const heeftDoel=st.dalton.dBoven.some(x=>x)||st.dalton.dOnder.some(x=>x);
-  const legenda=heeftDoel?`<line x1="40" y1="1262" x2="90" y2="1262" stroke="${DONKER}" stroke-width="11" stroke-linecap="round"/><text x="104" y="1271" font-family="${FONT}" font-size="24" fill="${DONKER}">mijn lat</text>`:"";
+  const legenda=heeftDoel?`<line x1="40" y1="1262" x2="90" y2="1262" stroke="${DONKER}" stroke-width="11" stroke-linecap="round"/><text x="104" y="1271" font-family="${FONT}" font-size="24" fill="${DONKER}">mijn doel</text>`:"";
   document.getElementById('svgVaard').innerHTML=`<rect width="${W}" height="${H}" fill="#fff"/><defs>${defs.join("")}</defs>`+cel+lijn+
     `<circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="${PAARS}" stroke-width="3.5"/><circle cx="${CX}" cy="${CY}" r="${HUB}" fill="${PAARS}"/>`+
     doel+ringNummers(max,bw)+lab+titels+legenda+voet(H-22);
