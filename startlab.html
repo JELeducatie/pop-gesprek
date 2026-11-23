@@ -242,12 +242,12 @@ const DALTON={titelBoven:"Dalton Kernwaarden",titelOnder:"Basisvaardigheden",max
 const KLEUREN=["#8EC5F0","#F4A3A3","#9ED89E","#F7C873","#C3A6EA","#6ED3CF"];
 const VAKKEN_K1=["Nederlands","Engels","Frans","Spaans","Wiskunde","Biologie","Aardrijkskunde","Geschiedenis","Lichamelijke|opvoeding","Beeldende|vorming","Muziek","DAS"];
 const VAKKEN_K2=["Nederlands","Engels","Frans","Spaans","Duits","Wiskunde","Nask","Biologie","Aardrijkskunde","Geschiedenis","Lichamelijke|opvoeding","Beeldende|vorming","DAS"];
-const PROFIELEN=`Cultuur & Maatschappij: Geschiedenis*2, Engels, Frans, Duits, Spaans, Beeldende vorming, Aardrijkskunde
-Economie & Maatschappij: Wiskunde*2, Geschiedenis, Aardrijkskunde, Engels, Duits
-Natuur & Gezondheid: Biologie*2, Nask*2, Wiskunde, Aardrijkskunde
-Natuur & Techniek: Wiskunde*2, Nask*2, Biologie
-Economie (mavo): Wiskunde, Aardrijkskunde, Duits, Frans, Engels
-Zorg & welzijn (mavo): Biologie*2, Wiskunde, Geschiedenis, Aardrijkskunde`;
+const PROFIELEN=`Cultuur & Maatschappij: Geschiedenis*2, Wiskunde, Frans, Duits, Spaans, Aardrijkskunde, Beeldende vorming
+Economie & Maatschappij: Geschiedenis*2, Wiskunde*2, Frans, Duits, Spaans, Aardrijkskunde
+Natuur & Gezondheid: Biologie*2, Nask*2, Wiskunde*2, Aardrijkskunde
+Natuur & Techniek: Wiskunde*2, Nask*2, Biologie*2
+Economie (mavo): Wiskunde*2, Geschiedenis*2, Frans, Duits, Spaans, Aardrijkskunde
+Zorg & welzijn (mavo): Biologie*2, Nask*2, Wiskunde*2, Aardrijkskunde`;
 const KLASSEN=`2 mavo/havo = Economie (mavo) + Economie & Maatschappij (havo) | Zorg & welzijn (mavo) + Natuur & Gezondheid (havo) | Cultuur & Maatschappij (havo) | Natuur & Techniek (havo)
 2 havo/vwo = Cultuur & Maatschappij | Economie & Maatschappij | Natuur & Gezondheid | Natuur & Techniek
 2 atheneum = Cultuur & Maatschappij | Economie & Maatschappij | Natuur & Gezondheid | Natuur & Techniek
@@ -261,12 +261,12 @@ havo of vwo (weet ik nog niet) = Cultuur & Maatschappij | Economie & Maatschappi
 const soortVraag=()=>cfg.versie==="klas3"?"Op welk niveau ga je een voorsorteerprofiel kiezen?":"Wat voor klas is het?";
 const soortKort=()=>cfg.versie==="klas3"?"Mijn niveau:":"Mijn klas:";
 const VAKKEN_K3=["Nederlands","Engels","Frans","Spaans","Duits","Wiskunde","Natuurkunde","Scheikunde","Biologie","Economie","Aardrijkskunde","Geschiedenis","Lichamelijke|opvoeding","Beeldende|vorming"];
-const PROFIELEN3=`Cultuur & Maatschappij: Geschiedenis*2, Engels, Frans, Duits, Spaans, Beeldende vorming, Aardrijkskunde
-Economie & Maatschappij: Economie*2, Wiskunde*2, Geschiedenis, Aardrijkskunde, Engels, Duits
-Natuur & Gezondheid: Biologie*2, Scheikunde*2, Natuurkunde, Wiskunde, Aardrijkskunde
-Natuur & Techniek: Wiskunde*2, Natuurkunde*2, Scheikunde*2, Biologie
-Economie (mavo): Economie*2, Wiskunde, Aardrijkskunde, Duits, Frans, Engels
-Zorg & welzijn (mavo): Biologie*2, Scheikunde, Wiskunde, Geschiedenis, Aardrijkskunde`;
+const PROFIELEN3=`Cultuur & Maatschappij: Geschiedenis*2, Wiskunde, Frans, Duits, Spaans, Aardrijkskunde, Economie, Beeldende vorming
+Economie & Maatschappij: Economie*2, Geschiedenis*2, Wiskunde*2, Frans, Duits, Spaans, Aardrijkskunde
+Natuur & Gezondheid: Biologie*2, Scheikunde*2, Wiskunde*2, Aardrijkskunde, Natuurkunde
+Natuur & Techniek: Wiskunde*2, Natuurkunde*2, Scheikunde*2, Biologie*2
+Economie (mavo): Economie*2, Wiskunde*2, Geschiedenis*2, Frans, Duits, Spaans, Aardrijkskunde
+Zorg & welzijn (mavo): Biologie*2, Scheikunde*2, Wiskunde*2, Aardrijkskunde, Natuurkunde`;
 const leerjaar=v=>parseInt(String(v||"klas2").replace("klas",""))||2;
 const BASIS_1B=[["Zelfstandigheid","Ik kan zelfstandig aan|mijn taken werken en|weet wanneer ik|hulp nodig heb"],
   ["Verantwoordelijkheid","Ik kies de juiste|werkplek en laat daar|het gedrag zien dat|erbij past"],
