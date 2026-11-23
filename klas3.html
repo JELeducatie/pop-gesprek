@@ -493,6 +493,13 @@ function parseKlassen(){
 }
 const basisNaam=n=>n.replace(/\s*\(.*?\)\s*$/,"").trim().toLowerCase();
 const tagVan=n=>{const m=n.match(/\(([^)]*)\)\s*$/);return m?m[1]:""};
+const PROFIEL_INHOUD={
+  "Cultuur & Maatschappij":"Geschiedenis, Wiskunde A of B, Aardrijkskunde of Economie, een taal, tekenen of muziek",
+  "Economie & Maatschappij":"Economie, Geschiedenis, Wiskunde A of B, een taal of Aardrijkskunde",
+  "Natuur & Gezondheid":"Biologie, Scheikunde, Wiskunde A of B, Aardrijkskunde of Natuurkunde",
+  "Natuur & Techniek":"Biologie, Scheikunde, Natuurkunde, Wiskunde B",
+  "Economie":"Economie, Wiskunde, Geschiedenis, een taal of Aardrijkskunde",
+  "Zorg & welzijn":"Biologie, Scheikunde (nask2), Wiskunde, Aardrijkskunde of Natuurkunde (nask1)"};
 function renderProfiel(){
   const defs=parseProf(cfg.profielen),klas=parseKlassen().find(k=>k.naam===st.klas);
   const zoek=n=>defs.find(d=>d.naam.toLowerCase()===n.toLowerCase())||defs.find(d=>basisNaam(d.naam)===basisNaam(n));
@@ -504,7 +511,7 @@ function renderProfiel(){
   const svg=document.getElementById('svgProfiel');svg.setAttribute('viewBox',`0 0 1200 ${H3}`);
   const volNaam=r=>r.naam+(r.tag?` (${r.tag})`:"");
   let s=`<rect width="1200" height="${H3}" fill="#fff"/><text x="600" y="66" text-anchor="middle" font-family="${TFONT}" font-weight="700" font-size="54" fill="${GEEL}">Welk profiel past bij mij?</text>
-  <text x="600" y="106" text-anchor="middle" font-family="${FONT}" font-size="22" fill="${PAARS}">${cfg.versie==="klas3"?"Niveau":"Klas"}: ${esc(st.klas)} · gemiddelde van de vakken die bij elk profiel horen</text>`;
+  <text x="600" y="106" text-anchor="middle" font-family="${FONT}" font-size="22" fill="${PAARS}">${cfg.versie==="klas3"?"Niveau":"Klas"}: ${esc(st.klas)} · onder elk profiel staan de profielvakken</text>`;
   if(!alle.some(r=>r.t||r.p)){s+=`<text x="600" y="200" text-anchor="middle" font-family="${FONT}" font-size="28" fill="${PAARS}">Vul eerst in de roos per vak beide scores in.</text>`}
   else{
     const bt=alle.reduce((a,b)=>b.t>a.t?b:a),bp=alle.reduce((a,b)=>b.p>a.p?b:a);
@@ -521,7 +528,7 @@ function renderProfiel(){
       const ry=y+6+n*rijH;
       if(n) s+=`<line x1="72" y1="${ry}" x2="1136" y2="${ry}" stroke="${RASTER}" stroke-width="1.5" stroke-dasharray="6 5"/>`;
       s+=`<text x="76" y="${ry+46}" font-family="${FONT}" font-size="27" font-weight="700" fill="${PAARS}">${esc(r.naam)}${r.tag?`<tspan dx="12" font-size="18" font-weight="700" fill="#fff" stroke="${PAARS}" stroke-width="9" stroke-linejoin="round" paint-order="stroke"> ${esc(r.tag.toUpperCase())} </tspan>`:""}</text>`;
-      s+=wrap(r.vakken.map(x=>x.v[0].toUpperCase()+x.v.slice(1)).join(", "),44).slice(0,2).map((l,k)=>`<text x="76" y="${ry+78+k*22}" font-family="${FONT}" font-size="18" fill="${PAARS}" opacity=".75">${esc(l)}</text>`).join("");
+      s+=wrap(PROFIEL_INHOUD[r.naam]||r.vakken.map(x=>x.v[0].toUpperCase()+x.v.slice(1)).join(", "),50).slice(0,2).map((l,k)=>`<text x="76" y="${ry+78+k*22}" font-family="${FONT}" font-size="17" fill="${PAARS}" opacity=".8">${esc(l)}</text>`).join("");
       [["t",TALENT,TALENT_T,"goed in",ry+16],["p",PASSIE,PASSIE_T,"leuk",ry+64]].forEach(([k,kl,kt,txt,yy])=>{
         s+=`<rect x="${bx}" y="${yy}" width="${bwid}" height="36" rx="8" fill="#fff" stroke="${RASTER}" stroke-width="1.5"/>`;
         if(r[k]) s+=`<rect x="${bx}" y="${yy}" width="${f(sc(r[k]))}" height="36" rx="8" fill="${kl}"/>`;
@@ -531,7 +538,7 @@ function renderProfiel(){
     });
     y+=h+gap;
   });
-  s+=`<text x="600" y="${H3-50}" text-anchor="middle" font-family="${FONT}" font-size="19" fill="${PAARS}" opacity=".75">Dit is een indicatie op basis van je vakken in klas ${leerjaar(cfg.versie)}, geen advies. Bespreek het met je mentor.</text>`+voet(H3-14);
+  s+=`<text x="600" y="${H3-50}" text-anchor="middle" font-family="${FONT}" font-size="19" fill="${PAARS}" opacity=".75">De balken zijn berekend met jouw scores voor de vakken die je nu al hebt. Een indicatie, geen advies.</text>`+voet(H3-14);
   svg.innerHTML=s;
 }
 
